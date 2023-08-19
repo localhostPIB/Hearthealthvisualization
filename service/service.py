@@ -1,4 +1,4 @@
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.pdfgen import canvas
 import plotly.express as px
 import pandas as pd
@@ -45,21 +45,30 @@ def make_line_plot_service(data, save: bool):
 
 
 def save_plot_to_pdf(plot, pdf_path):
-    c = canvas.Canvas(pdf_path, pagesize=A4)
+    canvas_width, canvas_height = landscape(A4)
+    c = canvas.Canvas(pdf_path, pagesize=(canvas_width, canvas_height))
+    try:
+        img_bytes = plot.to_image(format="png")
 
-    img_bytes = plot.to_image(format="png")
+        with tempfile.NamedTemporaryFile(delete=False) as temp:
+            temp.write(img_bytes)
+            temp.flush()
+            temp_name = temp.name
 
-    with tempfile.NamedTemporaryFile(delete=False) as temp:
-        temp.write(img_bytes)
-        temp.flush()
-        temp_name = temp.name
+        width = 500
+        height = 300
 
-    x = 50
-    y = 550
-    width = 500
-    height = 300
+        desired_img_width = canvas_width
+        scaling_factor = desired_img_width / width
+        width *= scaling_factor
+        height *= scaling_factor
 
-    c.drawImage(temp_name, x, y, width, height)
-    os.remove(temp_name)
+        x = (canvas_width - width) / 2
+        y = (canvas_height - height) / 2
 
-    c.save()
+        c.drawImage(temp_name, x, y, width, height)
+        os.remove(temp_name)
+
+        c.save()
+    except Exception as e:
+        raise

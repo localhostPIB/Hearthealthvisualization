@@ -9,8 +9,8 @@ from tkinter.filedialog import asksaveasfilename
 class MainFrame:
 
     def __init__(self, root):
-        #icon_path = "ressource/img/heart-1151624_1280.ico" #todo  # Passe den Pfad zu deinem Icon an
-        #root.iconbitmap(icon_path)
+        icon_path = "ressource/img/heart-1151624_1280.ico"
+        root.iconbitmap(icon_path)
         validation = root.register(validate_positive)
 
         root.title('Gesundheit')
@@ -18,7 +18,6 @@ class MainFrame:
         self.diastolischer_value = tk.IntVar()
         self.puls_value = tk.IntVar()
 
-        label1 = tk.Label(text="Gesundheits-Informationen")
         label_systolisch = tk.Label(text="Systolischer Wert: ")
         label_diastolisch = tk.Label(text="Diastolisch Wert: ")
         label_puls = tk.Label(text="Puls: ")
@@ -68,7 +67,9 @@ class MainFrame:
         pdf_file = asksaveasfilename(initialfile='Health.pdf',
                                      defaultextension=".pdf", filetypes=[("Text Documents", "*.pdf")])
         plot = self.get_plot(self.get_all_heart_value(), True)
-        save_plot_to_pdf(plot, pdf_file)
+
+        if not pdf_file is '':
+            save_plot_to_pdf(plot, pdf_file)
 
     def save_heart_value(self, tree):
         save_heart_service(int(self.inputfield_systolisch.get()),
