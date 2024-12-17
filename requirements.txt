@@ -4,3 +4,6 @@ pandas~=1.5.3
 reportlab~=3.6.12
 kaleido==0.1.*
 packaging
+nicegui
+pywebview
+python-dotenv

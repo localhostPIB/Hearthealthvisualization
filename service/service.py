@@ -11,18 +11,14 @@ from model import Heart
 
 
 def save_heart_service(systolic_BP: int, diastolic_BP: int, puls_Frequency: int):
-    heart: Heart = Heart(systolic_BP=systolic_BP, diastolic_BP=diastolic_BP, puls_Frequency=puls_Frequency)
-
-    save_heart(heart)
+    save_heart(Heart(systolic_BP=systolic_BP, diastolic_BP=diastolic_BP, puls_Frequency=puls_Frequency))
 
 
 def get_all_heart_service() -> list[Heart]:
-    list: list[Heart] = get_all_heart()
-
-    return list
+    return get_all_heart()
 
 
-def make_line_plot_service(data, save: bool):
+def make_line_plot_service(data):
     df = pd.DataFrame([(d.puls_Frequency, d.date, d.systolic_BP, d.diastolic_BP) for d in data],
                       columns=['puls_Frequency', 'date', 'systolic_BP', 'diastolic_BP'])
 
@@ -37,9 +33,6 @@ def make_line_plot_service(data, save: bool):
         xaxis_title="Datum",
         yaxis_title="Blutdruck/Puls"
     )
-
-    if not save:
-        fig.show()
 
     return fig
 

@@ -1,12 +1,15 @@
-from tkinter import Tk
+import os
 
+from nicegui import ui
+from dotenv import load_dotenv
 from database import Database
+from gui import build_gui
 from model import Heart
-from gui import MainFrame
 
+load_dotenv()
 
 def init_database():
-    SQLALCHEMY_DATABASE_URL = "sqlite:///hearth_health.sqlite3"
+    SQLALCHEMY_DATABASE_URL = os.getenv('DATABASE_URL')
     db = Database(SQLALCHEMY_DATABASE_URL)
 
     db.create_database(tables=[Heart.__table__])
@@ -14,10 +17,7 @@ def init_database():
     return db
 
 
-if __name__ == '__main__':
-    root = Tk()
-    root.minsize(1050, 400)
-    root.maxsize(1050, 400)
+if __name__ in {"__main__", "__mp_main__"}:
     init_database()
-    mf = MainFrame(root)
-    root.mainloop()
+    build_gui()
+    ui.run(native=True, favicon='🫀', frameless=True, fullscreen=True, language="de")

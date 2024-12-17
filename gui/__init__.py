@@ -1,1 +1,1 @@
-from .gui import MainFrame
+from .gui import *
