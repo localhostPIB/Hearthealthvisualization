@@ -7,3 +7,4 @@ packaging
 nicegui
 pywebview
 python-dotenv
+kaleido

@@ -1,12 +1,14 @@
+from datetime import datetime
+import os
+import tempfile
+
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.pdfgen import canvas
 import plotly.express as px
 import pandas as pd
 
-import os
-import tempfile
-
 from dao import save_heart, get_all_heart
+from gui.utils import get_downloads_folder
 from model import Heart
 
 
@@ -37,24 +39,28 @@ def make_line_plot_service(data):
     return fig
 
 
-def save_plot_to_pdf(plot, pdf_path):
+def save_plot_to_pdf(plot, pdf_name=None, file_format=".pdf"):
     canvas_width, canvas_height = landscape(A4)
+    now = datetime.now()
+    pdf_path = os.path.join(get_downloads_folder(), pdf_name + str(now.timestamp() * 1000) + file_format)
+
+    if pdf_name is None:
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=file_format)
+
     c = canvas.Canvas(pdf_path, pagesize=(canvas_width, canvas_height))
+
     try:
-        img_bytes = plot.to_image(format="png")
+        img_bytes = plot.to_image(format="png", width=1000, height=600)
 
-        with tempfile.NamedTemporaryFile(delete=False) as temp:
-            temp.write(img_bytes)
-            temp.flush()
-            temp_name = temp.name
-
-        width = 500
-        height = 300
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_img:
+            temp_img.write(img_bytes)
+            temp_img.flush()
+            temp_name = temp_img.name
 
         desired_img_width = canvas_width
-        scaling_factor = desired_img_width / width
-        width *= scaling_factor
-        height *= scaling_factor
+        scaling_factor = desired_img_width / 1000
+        width = 1000 * scaling_factor
+        height = 600 * scaling_factor
 
         x = (canvas_width - width) / 2
         y = (canvas_height - height) / 2
@@ -63,5 +69,7 @@ def save_plot_to_pdf(plot, pdf_path):
         os.remove(temp_name)
 
         c.save()
+
+        return pdf_path
     except Exception as e:
-        raise
+        raise RuntimeError(f"Fehler beim Erstellen der PDF: {e}")

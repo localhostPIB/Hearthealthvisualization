@@ -8,7 +8,9 @@ from model import Heart
 
 load_dotenv()
 
+
 def init_database():
+    """Initializes the database and the OR-mapper."""
     SQLALCHEMY_DATABASE_URL = os.getenv('DATABASE_URL')
     db = Database(SQLALCHEMY_DATABASE_URL)
 
@@ -20,4 +22,5 @@ def init_database():
 if __name__ in {"__main__", "__mp_main__"}:
     init_database()
     build_gui()
+    # Nicegui main settings.
     ui.run(native=True, favicon='🫀', frameless=True, fullscreen=True, language="de")
