@@ -1,3 +1,4 @@
+from exception import HeathValueNotSaveException
 from model import Heart
 from database import Database
 
@@ -6,21 +7,39 @@ db = Database(SQLALCHEMY_DATABASE_URL)
 
 
 def save_heart(heart: Heart):
-    with db.session() as session:
-        session.add(heart)
-        session.commit()
+    try:
+        with db.session() as session:
+            session.add(heart)
+            session.commit()
+    except HeathValueNotSaveException as e:
+        print(e)
+        raise e
+    finally:
+        session.rollback()
         session.close()
 
 
 def find_heart_by_id(id: int):
-    with db.session() as session:
-        heart: Heart = session.query(Heart).get(id)
+    try:
+        with db.session() as session:
+            heart: Heart = session.query(Heart).get(id)
+
+            return heart
+    except Exception as e:
+        print(e)
+        raise e
+    finally:
         session.close()
-        return heart
 
 
 def get_all_heart() -> list[Heart]:
-    with db.session() as session:
-        list: list[Heart] = session.query(Heart).all()
+    try:
+        with db.session() as session:
+            list: list[Heart] = session.query(Heart).all()
+
+            return list
+    except Exception as e:
+        print(e)
+        raise e
+    finally:
         session.close()
-        return list

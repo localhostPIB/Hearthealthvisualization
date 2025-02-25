@@ -1,3 +1,5 @@
+import json
+
 from nicegui import ui, app
 
 from gui.utils import validate_positive_integer
@@ -26,6 +28,7 @@ def build_gui():
         with ui.tabs().classes('w-full') as tabs:
             one = ui.tab('Plot', icon='stacked_line_chart')
             two = ui.tab('Speichern', icon='save_as')
+            three = ui.tab('Alle Werte', icon='table_view')
         with ui.tab_panels(tabs, value=one).classes('w-full'):
             with ui.tab_panel(one):
                 ui.label('Herzwerte Übersicht').classes('text-2xl font-bold mb-4')
@@ -52,5 +55,10 @@ def build_gui():
                 ui.button('Speichere Plot als PDF',
                           on_click=lambda: ui.download(save_plot_to_pdf(make_line_plot_service(get_all_heart_service()),
                                                                         "Hearth"))).classes('px-6 py-2')
+
+            with ui.tab_panel(three):
+                json.dumps([user.to_dict() for user in get_all_heart_service()], indent=4)
+                pass
+                #ui.table(columns=get_all_heart_service(), rows=get_all_heart_service(), row_key='name')
 
         ui.button('App schließen', on_click=lambda: app.shutdown()).classes('bg-red-500 text-white px-6 py-2')
