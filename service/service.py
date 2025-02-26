@@ -1,6 +1,8 @@
+import json
 from datetime import datetime
 import os
 import tempfile
+from typing import List, Dict, Any
 
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.pdfgen import canvas
@@ -18,6 +20,24 @@ def save_heart_service(systolic_BP: int, diastolic_BP: int, puls_Frequency: int)
 
 def get_all_heart_service() -> list[Heart]:
     return get_all_heart()
+
+
+def all_heart_values_as_json_service() -> list[dict[str, Any]]:
+    """
+    Revised the blood pressure values for Nicegui as JSON.
+
+    :returns: Blood pressure values as JSON
+    :rtype: list
+    """
+    return [
+        {
+            "Systolisch": heart.systolic_BP,
+            "Diastolisch": heart.diastolic_BP,
+            "Puls": heart.puls_Frequency,
+            "Datum": heart.date.strftime("%d-%m-%Y")
+        }
+        for heart in get_all_heart_service()
+    ]
 
 
 def make_line_plot_service(data):

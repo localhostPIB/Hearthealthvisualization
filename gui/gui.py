@@ -1,9 +1,8 @@
-import json
-
 from nicegui import ui, app
 
 from gui.utils import validate_positive_integer
-from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_plot_to_pdf
+from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_plot_to_pdf, \
+    all_heart_values_as_json_service
 
 
 def save_values(diastolic_input, systolic_input, pulse_input):
@@ -57,8 +56,7 @@ def build_gui():
                                                                         "Hearth"))).classes('px-6 py-2')
 
             with ui.tab_panel(three):
-                json.dumps([user.to_dict() for user in get_all_heart_service()], indent=4)
-                pass
-                #ui.table(columns=get_all_heart_service(), rows=get_all_heart_service(), row_key='name')
+                table = ui.table(rows=all_heart_values_as_json_service(), pagination=10,
+                                 on_pagination_change=lambda e: ui.notify(e.value))
 
         ui.button('App schließen', on_click=lambda: app.shutdown()).classes('bg-red-500 text-white px-6 py-2')
