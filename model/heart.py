@@ -4,6 +4,9 @@ from database import Base
 
 
 class Heart(Base):
+    """
+    Heart values Model for OR-Mapper.
+    """
     __tablename__ = 'heart'
 
     id = Column(Integer, primary_key=True)

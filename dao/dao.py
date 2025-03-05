@@ -1,8 +1,15 @@
+import os
+
+from dotenv import load_dotenv
+
 from exception import HeathValueNotSaveException
 from model import Heart
 from database import Database
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///hearth_health.sqlite3"
+
+load_dotenv()
+
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 db = Database(SQLALCHEMY_DATABASE_URL)
 
 

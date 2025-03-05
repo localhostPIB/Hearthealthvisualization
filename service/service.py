@@ -14,8 +14,8 @@ from gui.utils import get_downloads_folder
 from model import Heart
 
 
-def save_heart_service(systolic_BP: int, diastolic_BP: int, puls_Frequency: int):
-    save_heart(Heart(systolic_BP=systolic_BP, diastolic_BP=diastolic_BP, puls_Frequency=puls_Frequency))
+def save_heart_service(systolic_bp: int, diastolic_bp: int, puls_frequency: int):
+    save_heart(Heart(systolic_BP=systolic_bp, diastolic_BP=diastolic_bp, puls_Frequency=puls_frequency))
 
 
 def get_all_heart_service() -> list[Heart]:

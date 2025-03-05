@@ -4,6 +4,9 @@ from gui.utils import validate_positive_integer
 from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_plot_to_pdf, \
     all_heart_values_as_json_service
 
+table = None
+plot = None
+
 
 def save_values(diastolic_input, systolic_input, pulse_input):
     try:
@@ -17,12 +20,24 @@ def save_values(diastolic_input, systolic_input, pulse_input):
             return
 
         save_heart_service(systolic, diastolic, pulse)
+        update_view()
         ui.notify(f'Diastolisch: {diastolic}, Systolisch: {systolic}, Puls: {pulse}', color='green')
     except ValueError:
         ui.notify('Ungültige Eingabe. Bitte geben Sie (ganze) positive Zahlen ein!', color='red')
 
 
+def update_view():
+    if table and plot:
+        table.rows = all_heart_values_as_json_service()
+        table.update()
+        plot.fig = make_line_plot_service(get_all_heart_service())
+        plot.update()
+
+
 def build_gui():
+    global table
+    global plot
+
     with (ui.grid(columns=1).classes('justify-center items-center w-full')):
         with ui.tabs().classes('w-full') as tabs:
             one = ui.tab('Plot', icon='stacked_line_chart')
