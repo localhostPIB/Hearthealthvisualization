@@ -2,8 +2,9 @@ import json
 from datetime import datetime
 import os
 import tempfile
-from typing import List, Dict, Any
+from typing import List, Dict, Any, LiteralString
 
+from plotly.graph_objs import Figure
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.pdfgen import canvas
 import plotly.express as px
@@ -19,6 +20,12 @@ def save_heart_service(systolic_bp: int, diastolic_bp: int, puls_frequency: int)
 
 
 def get_all_heart_service() -> list[Heart]:
+    """
+    Outputs all heart-objects in a list.
+
+    :returns: List with all heart-objects.
+    :rtype: list
+    """
     return get_all_heart()
 
 
@@ -26,7 +33,7 @@ def all_heart_values_as_json_service() -> list[dict[str, Any]]:
     """
     Revised the blood pressure values for Nicegui as JSON.
 
-    :returns: Blood pressure values as JSON
+    :returns: Blood pressure values as JSON.
     :rtype: list
     """
     return [
@@ -40,8 +47,16 @@ def all_heart_values_as_json_service() -> list[dict[str, Any]]:
     ]
 
 
-def make_line_plot_service(data):
-    df = pd.DataFrame([(d.puls_Frequency, d.date, d.systolic_BP, d.diastolic_BP) for d in data],
+def make_line_plot_service(heart_list: List[Heart]) -> Figure:
+    """
+    Creates a plot with Plotly based on the heart values.
+        
+    :param heart_list:
+    :returns: Plotly figure.
+    :rtype:  Figure
+    """
+    df = pd.DataFrame([(heart_value.puls_Frequency, heart_value.date, heart_value.systolic_BP, heart_value.diastolic_BP)
+                       for heart_value in heart_list],
                       columns=['puls_Frequency', 'date', 'systolic_BP', 'diastolic_BP'])
 
     fig = px.line(df, x=df["date"], y=df.columns, width=1024, height=768)
@@ -59,7 +74,16 @@ def make_line_plot_service(data):
     return fig
 
 
-def save_plot_to_pdf(plot, pdf_name=None, file_format=".pdf"):
+def save_plot_to_document(plot: Figure, pdf_name=None, file_format=".pdf") -> LiteralString | str | bytes:
+    """
+    Creates a document of the plot.
+
+    :param plot: Plotly figure.
+    :param pdf_name: The name of the output PDF.
+    :param file_format: The format of the output document, default is '.pdf'.
+    :returns: The name of the output PDF.
+    :rtype: str
+    """
     canvas_width, canvas_height = landscape(A4)
     now = datetime.now()
     pdf_path = os.path.join(get_downloads_folder(), pdf_name + str(now.timestamp() * 1000) + file_format)

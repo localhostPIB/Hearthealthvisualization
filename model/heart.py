@@ -20,4 +20,5 @@ class Heart(Base):
           self.systolic_BP,
           self.diastolic_BP,
           self.puls_Frequency,
-          self.date)
+          self.date
+        )

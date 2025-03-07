@@ -14,6 +14,11 @@ db = Database(SQLALCHEMY_DATABASE_URL)
 
 
 def save_heart(heart: Heart):
+    """
+    Stores the acute heart value.
+        
+    :param heart: Heart-Object with heart value. 
+    """
     try:
         with db.session() as session:
             session.add(heart)
@@ -26,10 +31,17 @@ def save_heart(heart: Heart):
         session.close()
 
 
-def find_heart_by_id(id: int):
+def find_heart_by_id(hid: int) -> Heart:
+    """
+    Find a heart-object by id.
+        
+    :param hid: Heart-Object id. 
+    :returns: Heart-Object.
+    :rtype: Heart
+    """
     try:
         with db.session() as session:
-            heart: Heart = session.query(Heart).get(id)
+            heart: Heart = session.query(Heart).get(hid)
 
             return heart
     except Exception as e:
@@ -40,6 +52,12 @@ def find_heart_by_id(id: int):
 
 
 def get_all_heart() -> list[Heart]:
+    """
+    Outputs all heart-objects in a list.
+
+    :returns: List with all heart-objects.
+    :rtype: list
+    """
     try:
         with db.session() as session:
             list: list[Heart] = session.query(Heart).all()

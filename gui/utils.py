@@ -1,8 +1,13 @@
 import os
 
 
-def validate_positive_integer(value):
-    """Checks whether the number is positive"""
+def validate_positive_integer(value: int) -> str | None:
+    """Checks whether the number is positive.
+
+    :param value: The number to validate.
+    :return: The number or None if the number is negative.
+    :rtype: str | None
+    """
     try:
         int_value = int(value)
         if int_value <= 0:

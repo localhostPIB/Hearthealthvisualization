@@ -1,7 +1,7 @@
 from nicegui import ui, app
 
 from gui.utils import validate_positive_integer
-from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_plot_to_pdf, \
+from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_plot_to_document, \
     all_heart_values_as_json_service
 
 table = None
@@ -38,36 +38,43 @@ def build_gui():
     global table
     global plot
 
-    with (ui.grid(columns=1).classes('justify-center items-center w-full')):
+    with ui.grid(columns=1).classes('justify-center items-center w-full'):
         with ui.tabs().classes('w-full') as tabs:
             one = ui.tab('Plot', icon='stacked_line_chart')
             two = ui.tab('Speichern', icon='save_as')
             three = ui.tab('Alle Werte', icon='table_view')
+
         with ui.tab_panels(tabs, value=one).classes('w-full'):
             with ui.tab_panel(one):
                 ui.label('Herzwerte Übersicht').classes('text-2xl font-bold mb-4')
 
-                raw_plot = make_line_plot_service(get_all_heart_service())
-                plot = ui.plotly(raw_plot).classes('mb-6 w-full')
+                with ui.row().classes('flex w-full items-start gap-4'):
+                    plot_container = ui.card().classes('w-fill p-8')  # Der Plot nimmt 2/3 der Breite ein
+                    input_container = ui.card().classes('w-1/5 p-8')  # Die Inputs nehmen 1/3 der Breite ein
 
-                with ui.column().classes('gap-4 mb-6'):
-                    diastolic_input = ui.input('Diastolischer Wert', placeholder='1 - 999 mmHg',
+                    with plot_container:
+                        raw_plot = make_line_plot_service(get_all_heart_service())
+                        plot = ui.plotly(raw_plot).classes('max-w-full h-auto')
+
+                    with input_container:
+                        ui.label('Eingabe der Werte').classes('text-lg font-semibold mb-2')
+
+                        diastolic_input = ui.input('Diastolischer Wert', placeholder='1 - 999 mmHg',
+                                                   validation=validate_positive_integer).classes('w-full')
+
+                        systolic_input = ui.input('Systolischer Wert', placeholder='1 - 999 mmHg',
+                                                  validation=validate_positive_integer).classes('w-full')
+
+                        pulse_input = ui.input('Puls', placeholder='1 - 999 bpm',
                                                validation=validate_positive_integer).classes('w-full')
 
-                    systolic_input = ui.input('Systolischer Wert', placeholder='1 - 999 mmHg',
-                                              validation=validate_positive_integer).classes('w-full')
-
-                    pulse_input = ui.input('Puls', placeholder='1 - 999 bpm',
-                                           validation=validate_positive_integer).classes('w-full')
-
-                with ui.row().classes('gap-4 justify-center mb-6'):
-                    ui.button('Werte speichern',
-                              on_click=lambda: save_values(diastolic_input, systolic_input, pulse_input)).classes(
-                        'px-6 py-2')
+                        ui.button('Werte speichern',
+                                  on_click=lambda: save_values(diastolic_input, systolic_input, pulse_input)).classes(
+                            'px-6 py-2 mt-2')
 
             with ui.tab_panel(two):
                 ui.button('Speichere Plot als PDF',
-                          on_click=lambda: ui.download(save_plot_to_pdf(make_line_plot_service(get_all_heart_service()),
+                          on_click=lambda: ui.download(save_plot_to_document(make_line_plot_service(get_all_heart_service()),
                                                                         "Hearth"))).classes('px-6 py-2')
 
             with ui.tab_panel(three):
