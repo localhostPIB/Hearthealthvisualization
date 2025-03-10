@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, func, Date
+from datetime import datetime
+
+from sqlalchemy import Column, Integer, DateTime
 
 from database import Base
 
@@ -13,7 +15,7 @@ class Heart(Base):
     systolic_BP = Column(Integer)
     diastolic_BP = Column(Integer)
     puls_Frequency = Column(Integer)
-    date = Column(Date, default=func.current_date())
+    date = Column(DateTime, nullable=False, default=datetime.utcnow)
 
     def __repr__(self):
         return "%s %s %s %s" % (

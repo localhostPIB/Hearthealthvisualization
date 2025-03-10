@@ -15,8 +15,19 @@ from gui.utils import get_downloads_folder
 from model import Heart
 
 
-def save_heart_service(systolic_bp: int, diastolic_bp: int, puls_frequency: int):
-    save_heart(Heart(systolic_BP=systolic_bp, diastolic_BP=diastolic_bp, puls_Frequency=puls_frequency))
+def save_heart_service(systolic_bp: int, diastolic_bp: int, puls_frequency: int, date=None):
+    """
+    Save the heart-object in the Database.
+
+    :param systolic_bp: the systolic blood pressure.
+    :param diastolic_bp: the diastolic blood pressure.
+    :param puls_frequency: the pulse frequency.
+    :param date: the date of the measuring.
+    """
+    if date is None:
+        save_heart(Heart(systolic_BP=systolic_bp, diastolic_BP=diastolic_bp, puls_Frequency=puls_frequency))
+    else:
+        save_heart(Heart(systolic_BP=systolic_bp, diastolic_BP=diastolic_bp, puls_Frequency=puls_frequency, date=date))
 
 
 def get_all_heart_service() -> list[Heart]:
@@ -58,6 +69,8 @@ def make_line_plot_service(heart_list: List[Heart]) -> Figure:
     df = pd.DataFrame([(heart_value.puls_Frequency, heart_value.date, heart_value.systolic_BP, heart_value.diastolic_BP)
                        for heart_value in heart_list],
                       columns=['puls_Frequency', 'date', 'systolic_BP', 'diastolic_BP'])
+
+    df = df.sort_values(by='date')
 
     fig = px.line(df, x=df["date"], y=df.columns, width=1024, height=768)
 

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from nicegui import ui, app
 
 from gui.utils import validate_positive_integer
@@ -8,18 +10,22 @@ table = None
 plot = None
 
 
-def save_values(diastolic_input, systolic_input, pulse_input):
+def save_values(diastolic_input, systolic_input, pulse_input, date=None, time=None):
     try:
         diastolic = int(diastolic_input.value)
         systolic = int(systolic_input.value)
         pulse = int(pulse_input.value)
+
+        if date and time and date != '' and time != '':
+            full_datetime = f"{date.value} {time.value}"
+            date = datetime.strptime(f"{full_datetime}", "%Y-%m-%d %H:%M")
 
         if (validate_positive_integer(diastolic) or validate_positive_integer(systolic)
                 or validate_positive_integer(pulse)):
             ui.notify('Bitte nur positive Werte eingeben!', color='red')
             return
 
-        save_heart_service(systolic, diastolic, pulse)
+        save_heart_service(systolic, diastolic, pulse, date)
         update_view()
         ui.notify(f'Diastolisch: {diastolic}, Systolisch: {systolic}, Puls: {pulse}', color='green')
     except ValueError:
@@ -38,7 +44,7 @@ def build_gui():
     global table
     global plot
 
-    with ui.grid(columns=1).classes('justify-center items-center w-full'):
+    with (ui.grid(columns=1).classes('justify-center items-center w-full')):
         with ui.tabs().classes('w-full') as tabs:
             one = ui.tab('Plot', icon='stacked_line_chart')
             two = ui.tab('Speichern', icon='save_as')
@@ -49,8 +55,8 @@ def build_gui():
                 ui.label('Herzwerte Übersicht').classes('text-2xl font-bold mb-4')
 
                 with ui.row().classes('flex w-full items-start gap-4'):
-                    plot_container = ui.card().classes('w-fill p-8')  # Der Plot nimmt 2/3 der Breite ein
-                    input_container = ui.card().classes('w-1/5 p-8')  # Die Inputs nehmen 1/3 der Breite ein
+                    plot_container = ui.card().classes('w-fill p-8')
+                    input_container = ui.card().classes('w-1/5 p-8')
 
                     with plot_container:
                         raw_plot = make_line_plot_service(get_all_heart_service())
@@ -68,14 +74,21 @@ def build_gui():
                         pulse_input = ui.input('Puls', placeholder='1 - 999 bpm',
                                                validation=validate_positive_integer).classes('w-full')
 
+                        ui.label("Gib Datum und Uhrzeit ein:")
+
+                        date_input = ui.input("Datum", placeholder="Tag.Monat.Jahr").props('type=date').classes('w-full')
+                        time_input = ui.input("Uhrzeit", placeholder="hh:mm").props('type=time').classes('w-full')
+
+
                         ui.button('Werte speichern',
-                                  on_click=lambda: save_values(diastolic_input, systolic_input, pulse_input)).classes(
-                            'px-6 py-2 mt-2')
+                                  on_click=lambda: save_values(diastolic_input, systolic_input, pulse_input,
+                                                               date_input, time_input)).classes('px-6 py-2 mt-2')
 
             with ui.tab_panel(two):
                 ui.button('Speichere Plot als PDF',
-                          on_click=lambda: ui.download(save_plot_to_document(make_line_plot_service(get_all_heart_service()),
-                                                                        "Hearth"))).classes('px-6 py-2')
+                          on_click=lambda: ui.download(save_plot_to_document(
+                                                        make_line_plot_service(get_all_heart_service()), "Hearth"))
+                                                        ).classes('px-6 py-2')
 
             with ui.tab_panel(three):
                 table = ui.table(rows=all_heart_values_as_json_service(), pagination=10,
