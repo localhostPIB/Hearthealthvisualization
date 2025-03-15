@@ -18,8 +18,9 @@ def save_values(diastolic_input, systolic_input, pulse_input, date=None, time=No
 
         if date and time and date != '' and time != '':
             full_datetime = f"{date.value} {time.value}"
-            date = datetime.strptime(f"{full_datetime}", "%Y-%m-%d %H:%M")
-
+            date = datetime.strptime(f"{full_datetime}",
+                                     "%Y-%m-%d %H:%M")
+            # todo Plot aktualisieren
         if (validate_positive_integer(diastolic) or validate_positive_integer(systolic)
                 or validate_positive_integer(pulse)):
             ui.notify('Bitte nur positive Werte eingeben!', color='red')
@@ -33,6 +34,9 @@ def save_values(diastolic_input, systolic_input, pulse_input, date=None, time=No
 
 
 def update_view():
+    global table
+    global plot
+
     if table and plot:
         table.rows = all_heart_values_as_json_service()
         table.update()
@@ -59,26 +63,31 @@ def build_gui():
                     input_container = ui.card().classes('w-1/5 p-8')
 
                     with plot_container:
-                        raw_plot = make_line_plot_service(get_all_heart_service())
-                        plot = ui.plotly(raw_plot).classes('max-w-full h-auto')
+                        all_heart_values = get_all_heart_service()
+                        if all_heart_values:
+                            raw_plot = make_line_plot_service(all_heart_values)
+                            plot = ui.plotly(raw_plot).classes('max-w-full h-auto')
+                        else:
+                            ui.icon('info', color='grey', size='xl')
+                            ui.label('Keine Daten vorhanden').classes('text-lg text-gray-500')
 
                     with input_container:
                         ui.label('Eingabe der Werte').classes('text-lg font-semibold mb-2')
 
-                        diastolic_input = ui.input('Diastolischer Wert', placeholder='1 - 999 mmHg',
-                                                   validation=validate_positive_integer).classes('w-full')
-
                         systolic_input = ui.input('Systolischer Wert', placeholder='1 - 999 mmHg',
                                                   validation=validate_positive_integer).classes('w-full')
+
+                        diastolic_input = ui.input('Diastolischer Wert', placeholder='1 - 999 mmHg',
+                                                   validation=validate_positive_integer).classes('w-full')
 
                         pulse_input = ui.input('Puls', placeholder='1 - 999 bpm',
                                                validation=validate_positive_integer).classes('w-full')
 
                         ui.label("Gib Datum und Uhrzeit ein:")
 
-                        date_input = ui.input("Datum", placeholder="Tag.Monat.Jahr").props('type=date').classes('w-full')
+                        date_input = ui.input("Datum", placeholder="Tag.Monat.Jahr").props('type=date').classes(
+                            'w-full')
                         time_input = ui.input("Uhrzeit", placeholder="hh:mm").props('type=time').classes('w-full')
-
 
                         ui.button('Werte speichern',
                                   on_click=lambda: save_values(diastolic_input, systolic_input, pulse_input,
@@ -87,8 +96,8 @@ def build_gui():
             with ui.tab_panel(two):
                 ui.button('Speichere Plot als PDF',
                           on_click=lambda: ui.download(save_plot_to_document(
-                                                        make_line_plot_service(get_all_heart_service()), "Hearth"))
-                                                        ).classes('px-6 py-2')
+                              make_line_plot_service(get_all_heart_service()), "Hearth"))
+                          ).classes('px-6 py-2')
 
             with ui.tab_panel(three):
                 table = ui.table(rows=all_heart_values_as_json_service(), pagination=10,
