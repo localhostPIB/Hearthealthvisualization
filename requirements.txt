@@ -7,4 +7,4 @@ packaging
 nicegui
 pywebview
 python-dotenv
-kaleido
+numpy==1.23.5

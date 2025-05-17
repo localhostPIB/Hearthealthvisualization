@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 import os
 import tempfile
-from typing import List, Dict, Any, LiteralString
+from typing import List, Any, LiteralString
 
 from plotly.graph_objs import Figure
 from reportlab.lib.pagesizes import A4, landscape
@@ -56,6 +56,31 @@ def all_heart_values_as_json_service() -> list[dict[str, Any]]:
         }
         for heart in get_all_heart_service()
     ]
+
+
+def update_plot_with_new_heart(fig: Figure, new_heart: Heart) -> Figure:
+    """
+    Fügt einen neuen Messwert zum bestehenden Plot hinzu.
+
+    :param fig: Bestehende Plotly-Figur
+    :param new_heart: Neues Heart-Objekt
+    :return: Aktualisierte Figur
+    """
+    new_date = new_heart.date
+    new_puls = new_heart.puls_Frequency
+    new_sys = new_heart.systolic_BP
+    new_dia = new_heart.diastolic_BP
+
+    fig.data[0].x = list(fig.data[0].x) + [new_date]
+    fig.data[0].y = list(fig.data[0].y) + [new_puls]
+
+    fig.data[1].x = list(fig.data[1].x) + [new_date]
+    fig.data[1].y = list(fig.data[1].y) + [new_sys]
+
+    fig.data[2].x = list(fig.data[2].x) + [new_date]
+    fig.data[2].y = list(fig.data[2].y) + [new_dia]
+
+    return fig
 
 
 def make_line_plot_service(heart_list: List[Heart]) -> Figure:
