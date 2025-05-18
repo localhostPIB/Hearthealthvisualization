@@ -60,11 +60,11 @@ def all_heart_values_as_json_service() -> list[dict[str, Any]]:
 
 def update_plot_with_new_heart(fig: Figure, new_heart: Heart) -> Figure:
     """
-    Fügt einen neuen Messwert zum bestehenden Plot hinzu.
+    Adds a new measurement to the existing plot.
 
-    :param fig: Bestehende Plotly-Figur
-    :param new_heart: Neues Heart-Objekt
-    :return: Aktualisierte Figur
+    :param fig: Existing plotly figure
+    :param new_heart: New heart object
+    :return: Updated figure
     """
     new_date = new_heart.date
     new_puls = new_heart.puls_Frequency

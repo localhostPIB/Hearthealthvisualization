@@ -3,13 +3,14 @@ from datetime import datetime
 from nicegui import ui, app
 
 from gui.utils import validate_positive_integer
-from model import Heart
 from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_plot_to_document, \
-    all_heart_values_as_json_service, update_plot_with_new_heart
+    all_heart_values_as_json_service
 
 table = None
 plot = None
 raw_plot = None
+no_data_label = None
+no_data_icon = None
 
 
 def save_values(diastolic_input, systolic_input, pulse_input, date=None, time=None):
@@ -38,10 +39,8 @@ def save_values(diastolic_input, systolic_input, pulse_input, date=None, time=No
 
 
 def update_view(systolic, diastolic, pulse, date):
-    global table, plot, raw_plot
-    all_heart_values = get_all_heart_service()
-
-    # Tabelle aktualisieren
+    global table, plot, raw_plot, no_data_label, no_data_icon
+    # todo
     if table:
         table.rows = all_heart_values_as_json_service()
         ui.update(table)
@@ -54,15 +53,19 @@ def update_view(systolic, diastolic, pulse, date):
         plot.figure = new_fig
         plot.figure.layout = new_fig.layout
         ui.update(plot)
-    else:
-        raw_plot = make_line_plot_service(all_heart_values)
-        plot = ui.plotly(raw_plot).classes('max-w-full h-auto')
+        no_data_label.delete()
+        no_data_icon.delete()
+        no_data_label = None
+        no_data_icon = None
+
 
 
 def build_gui():
     global table
     global plot
     global raw_plot
+    global no_data_label
+    global no_data_icon
 
     with (ui.grid(columns=1).classes('justify-center items-center w-full')):
         with ui.tabs().classes('w-full') as tabs:
@@ -82,10 +85,15 @@ def build_gui():
                         all_heart_values = get_all_heart_service()
                         if all_heart_values:
                             raw_plot = make_line_plot_service(all_heart_values)
-                            plot = ui.plotly(raw_plot).classes('max-w-full h-auto')
                         else:
-                            ui.icon('info', color='grey', size='xl')
-                            ui.label('Keine Daten vorhanden').classes('text-lg text-gray-500')
+                            from plotly.graph_objects import Figure
+                            raw_plot = Figure()
+
+                        plot = ui.plotly(raw_plot).classes('max-w-full h-auto')
+
+                        if not all_heart_values:
+                            no_data_icon = ui.icon('info', color='grey', size='xl')
+                            no_data_label = ui.label('Keine Daten vorhanden').classes('text-lg text-gray-500')
 
                     with input_container:
                         ui.label('Eingabe der Werte').classes('text-lg font-semibold mb-2')
