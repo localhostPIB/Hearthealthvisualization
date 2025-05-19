@@ -40,7 +40,7 @@ def get_all_heart_service() -> list[Heart]:
     return get_all_heart()
 
 
-def all_heart_values_as_json_service() -> list[dict[str, Any]]:
+def all_values_as_json_service(all_values) -> list[dict[str, Any]]:
     """
     Revised the blood pressure values for Nicegui as JSON.
 
@@ -54,7 +54,7 @@ def all_heart_values_as_json_service() -> list[dict[str, Any]]:
             "Puls": heart.puls_Frequency,
             "Datum": heart.date.strftime("%d-%m-%Y")
         }
-        for heart in get_all_heart_service()
+        for heart in all_values
     ]
 
 
