@@ -1,6 +1,8 @@
 from datetime import datetime
+from typing import Final
 
 from nicegui import ui, app
+from plotly.graph_objs import Figure
 
 from gui.utils import validate_positive_integer
 from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_plot_to_document, \
@@ -40,11 +42,14 @@ def save_values(diastolic_input, systolic_input, pulse_input, date=None, time=No
 
 def update_view():
     global table, plot, raw_plot, no_data_label, no_data_icon
-    all_heart_values = get_all_heart_service()
+    all_heart_values: Final[list] = get_all_heart_service()
 
-    new_fig = make_line_plot_service(get_all_heart_service())
+    if table:
+        table.rows = all_values_as_json_service(all_heart_values)
+        table.update()
 
     if plot:
+        new_fig: Final[Figure] = make_line_plot_service(get_all_heart_service())
         plot.figure = new_fig
         plot.figure.layout = new_fig.layout
         ui.update(plot)
@@ -55,20 +60,12 @@ def update_view():
             no_data_label = None
             no_data_icon = None
 
-        # todo
-    if table:
-        table.rows = all_values_as_json_service(all_heart_values)
-        table.update()
-        ui.update(table)
-
 
 def build_gui():
-    global table
-    global plot
-    global raw_plot
-    global no_data_label
-    global no_data_icon
+    global table, plot, raw_plot, no_data_label, no_data_icon, no_data_label
+
     current_date = datetime
+    all_heart_values = get_all_heart_service()
 
     with (ui.grid(columns=1).classes('justify-center items-center w-full')):
         with ui.tabs().classes('w-full') as tabs:
@@ -85,7 +82,6 @@ def build_gui():
                     input_container = ui.card().classes('w-1/5 p-8')
 
                     with plot_container:
-                        all_heart_values = get_all_heart_service()
                         if all_heart_values:
                             raw_plot = make_line_plot_service(all_heart_values)
                         else:
@@ -128,6 +124,16 @@ def build_gui():
                           ).classes('px-6 py-2')
 
             with ui.tab_panel(three):
-                table = ui.table(rows=all_values_as_json_service(all_heart_values), pagination=10,
-                                 on_pagination_change=lambda e: ui.notify(e.value))
+                columns = [
+                    {'name': 'Datum', 'label': 'Datum', 'field': 'Datum'},
+                    {'name': 'Systolisch', 'label': 'Systolisch', 'field': 'Systolisch'},
+                    {'name': 'Diastolisch', 'label': 'Diastolisch', 'field': 'Diastolisch'},
+                    {'name': 'Puls', 'label': 'Puls', 'field': 'Puls'},
+                ]
+                if all_heart_values:
+                    table = ui.table(columns=columns,rows=all_values_as_json_service(all_heart_values), pagination=10,
+                                     on_pagination_change=lambda e: ui.notify(e.value))
+                else:
+                    table = ui.table(columns=columns,rows=[], pagination=10,
+                                     on_pagination_change=lambda e: ui.notify(e.value))
         ui.button('App schließen', on_click=lambda: app.shutdown()).classes('bg-red-500 text-white px-6 py-2')
