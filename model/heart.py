@@ -17,10 +17,17 @@ class Heart(Base):
     puls_Frequency = Column(Integer)
     date = Column(DateTime, nullable=False, default=datetime.utcnow)
 
+    def calc_pulse_pressure(self) -> int:
+        return self.systolic_BP - self.diastolic_BP
+
     def __repr__(self):
-        return "%s %s %s %s" % (
-          self.systolic_BP,
-          self.diastolic_BP,
-          self.puls_Frequency,
-          self.date
+        return "%s %s %s %s %s" % (
+            self.systolic_BP,
+            self.diastolic_BP,
+            self.calc_pulse_pressure(),
+            self.puls_Frequency,
+            self.date
         )
+
+
+

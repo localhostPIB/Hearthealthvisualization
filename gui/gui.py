@@ -47,6 +47,7 @@ def update_view():
     if table:
         table.rows = all_values_as_json_service(all_heart_values)
         table.update()
+        add_label()
 
     if plot:
         new_fig: Final[Figure] = make_line_plot_service(get_all_heart_service())
@@ -128,12 +129,51 @@ def build_gui():
                     {'name': 'Datum', 'label': 'Datum', 'field': 'Datum'},
                     {'name': 'Systolisch', 'label': 'Systolisch', 'field': 'Systolisch'},
                     {'name': 'Diastolisch', 'label': 'Diastolisch', 'field': 'Diastolisch'},
+                    {'name': 'Pulsdruck', 'label': 'Pulsdruck', 'field': 'Pulsdruck'},
                     {'name': 'Puls', 'label': 'Puls', 'field': 'Puls'},
                 ]
                 if all_heart_values:
-                    table = ui.table(columns=columns,rows=all_values_as_json_service(all_heart_values), pagination=10,
+                    table = ui.table(columns=columns, rows=all_values_as_json_service(all_heart_values), pagination=10,
                                      on_pagination_change=lambda e: ui.notify(e.value))
+                    add_label()
                 else:
-                    table = ui.table(columns=columns,rows=[], pagination=10,
+                    table = ui.table(columns=columns, rows=[], pagination=10,
                                      on_pagination_change=lambda e: ui.notify(e.value))
         ui.button('App schließen', on_click=lambda: app.shutdown()).classes('bg-red-500 text-white px-6 py-2')
+
+
+def add_label():
+    table.add_slot('body-cell-Puls', '''
+        <q-td key="puls" :props="props">
+            <q-badge :color="props.value > 80 ? 'red' : 'green'">
+                {{ props.value }}
+            </q-badge>
+        </q-td>
+    ''')
+
+    table.add_slot('body-cell-Systolisch', '''
+            <q-td key="systolisch" :props="props">
+                <q-badge :color="props.value > 120 ? 'red' : 'green'">
+                    {{ props.value }}
+                </q-badge>
+            </q-td>
+        ''')
+
+    table.add_slot('body-cell-Diastolisch', '''
+                <q-td key="diastolisch" :props="props">
+                    <q-badge :color="props.value > 80 ? 'red' : 'green'">
+                        {{ props.value }}
+                    </q-badge>
+                </q-td>
+            ''')
+
+    table.add_slot('body-cell-Pulsdruck', '''
+        <q-td key="pulsdruck" :props="props">
+            <q-badge :color="props.value >= 90 ? 'red' : 
+                             props.value >= 76 ? 'orange' : 
+                             props.value >= 66 ? 'yellow' : 
+                             props.value >= 40 ? 'green' : 'grey'">
+                {{ props.value }}
+            </q-badge>
+        </q-td>
+    ''')
