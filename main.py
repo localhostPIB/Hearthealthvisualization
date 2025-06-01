@@ -1,4 +1,5 @@
 import os
+import sys
 
 from nicegui import ui, native
 from dotenv import load_dotenv
@@ -23,5 +24,11 @@ def init_database():
 if __name__ in {"__main__", "__mp_main__"}:
     init_database()
     build_gui()
-    # Nicegui main settings.
-    ui.run(native=True, favicon='🫀', frameless=True, fullscreen=True, language="de", port=native.find_open_port())
+
+    if len(sys.argv) != 3:
+        ui.run(native=True, favicon='🫀', frameless=True, fullscreen=True, language="de", port=native.find_open_port())
+    else:
+        is_native = (sys.argv[1].lower() == "native")
+        port_str = sys.argv[2]
+
+        ui.run(native=is_native, favicon='🫀', frameless=is_native, fullscreen=is_native, language="de", port=int(port_str))
