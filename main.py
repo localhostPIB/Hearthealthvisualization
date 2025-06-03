@@ -8,6 +8,7 @@ from database import Database
 from gui import build_gui
 from model import Heart
 
+
 load_dotenv()
 
 

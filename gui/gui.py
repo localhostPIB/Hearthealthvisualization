@@ -65,6 +65,7 @@ def update_view():
 def build_gui():
     global table, plot, raw_plot, no_data_label, no_data_icon, no_data_label
 
+    ui.page_title('Gesundheitsmonitoring')
     current_date = datetime
     all_heart_values = get_all_heart_service()
 

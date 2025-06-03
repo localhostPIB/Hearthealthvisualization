@@ -1,14 +1,28 @@
 import subprocess
+import logging
 import sys
 import tkinter as tk
 from tkinter import messagebox
 
 
-def start_nicegui_in_new_process(is_native: bool, port: int, automatic_port: bool):
-    mode_arg = "native" if is_native else "browser"
-    port_arg = str(port) if automatic_port else str(port)
-    subprocess.Popen([sys.executable, "main.py", mode_arg, str(port), str(port_arg)],
-                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+def start_nicegui_in_new_process(is_native: bool, port: int, automatic_port: bool,root):
+    try:
+        mode_arg = "native" if is_native else "browser"
+        port_arg = str(port) if automatic_port else str(port)
+        process = subprocess.Popen([sys.executable, "main.py", mode_arg, str(port), str(port_arg)],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+
+        _, stderr_output = process.communicate(timeout=2)
+
+        if stderr_output:
+            raise RuntimeError(stderr_output.decode("utf-8"))
+        root.destroy()
+    except subprocess.TimeoutExpired:
+        pass
+
+    except RuntimeError as e:
+        logging.exception(f"Fehler beim Starten von main.py: {type(e).__name__}")
+        messagebox.showerror("Fehler", f"Fehler beim Starten: {type(e).__name__}")
 
 
 def start_app(port_entry, mode_var, disable_button, root):
@@ -22,12 +36,16 @@ def start_app(port_entry, mode_var, disable_button, root):
 
     is_browser = mode == "browser"
 
-    if not port_locked:
-        port = int(port)
-        start_nicegui_in_new_process(not is_browser, port, not port_locked)
-
-    start_nicegui_in_new_process(not is_browser, 5000, not port_locked)
-    root.destroy()
+    try:
+        if not port_locked:
+            port = int(port)
+            start_nicegui_in_new_process(not is_browser, port, not port_locked,root)
+        else:
+            start_nicegui_in_new_process(not is_browser, 5000, not port_locked,root)
+    except Exception as e:
+        logging.exception("Fehler beim Starten von main.py")
+        error_type = type(e).__name__
+        messagebox.showerror("Fehler", f"{error_type}: {e}")
 
 
 def start_tk_app():
