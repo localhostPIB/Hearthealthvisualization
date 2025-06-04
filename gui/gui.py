@@ -4,6 +4,7 @@ from typing import Final
 from nicegui import ui, app
 from plotly.graph_objs import Figure
 
+from exception import HeathValueNotSaveException
 from gui.utils import validate_positive_integer
 from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_plot_to_document, \
     all_values_as_json_service
@@ -16,6 +17,15 @@ no_data_icon = None
 
 
 def save_values(diastolic_input, systolic_input, pulse_input, date=None, time=None):
+    """
+    Here the new heart values are validated and forwarded to the service for storage, and the user receives feedback.
+    
+    :param diastolic_input: Diastolic value of the blood pressure measurement.
+    :param systolic_input: Systolic value of the blood pressure measurement.
+    :param pulse_input: Pulse of the blood pressure measurement.
+    :param date: Date of measurement.
+    :param time: Time of the measurement.
+    """ 
     global plot
 
     try:
@@ -36,11 +46,14 @@ def save_values(diastolic_input, systolic_input, pulse_input, date=None, time=No
         save_heart_service(systolic, diastolic, pulse, date)
         update_view()
         ui.notify(f'Diastolisch: {diastolic}, Systolisch: {systolic}, Puls: {pulse}', color='green')
-    except Exception as e:
+    except HeathValueNotSaveException as e:
         raise e
 
 
 def update_view():
+    """
+    Gui elements are updated here as soon as something is added, such as the table, plot and the symbols/hints.
+    """
     global table, plot, raw_plot, no_data_label, no_data_icon
     all_heart_values: Final[list] = get_all_heart_service()
 
@@ -63,6 +76,9 @@ def update_view():
 
 
 def build_gui():
+    """
+    The gui is assembled here.
+    """
     global table, plot, raw_plot, no_data_label, no_data_icon, no_data_label
 
     ui.page_title('Gesundheitsmonitoring')
@@ -144,35 +160,72 @@ def build_gui():
 
 
 def add_label():
+    """
+    Adds label to show the user which values are okay and which are too high
+
+    Pulse:
+    Blue: Bradycardia (<60)
+    Green: Normal (60-100)
+    Orange: Mild tachycardia (101-120)
+    Red: Severe tachycardia (>120)
+
+    Systolic:
+    Green: Normal (<120)
+    Yellow: High-normal (120-129)
+    Orange: Grade 1 hypertension (130-139)
+    Red: Grade 2 hypertension (140-179)
+    Purple: Grade 3 hypertension (≥180)
+
+    Diastolic:
+    Green: Normal (<85)
+    Yellow: High-normal (85-89)
+    Orange: Hypertension grade 1 (90-99)
+    Red: Hypertension grade 2 (100-109)
+    Violet (purple): Grade 3 hypertension (≥110)
+    """
     table.add_slot('body-cell-Puls', '''
         <q-td key="puls" :props="props">
-            <q-badge :color="props.value > 80 ? 'red' : 'green'">
+            <q-badge :color="
+                props.value > 120 ? 'red' :
+                props.value > 100 ? 'orange' :
+                props.value < 60 ? 'blue' :
+                'green'">
                 {{ props.value }}
             </q-badge>
         </q-td>
     ''')
 
     table.add_slot('body-cell-Systolisch', '''
-            <q-td key="systolisch" :props="props">
-                <q-badge :color="props.value > 120 ? 'red' : 'green'">
-                    {{ props.value }}
-                </q-badge>
-            </q-td>
-        ''')
+        <q-td key="systolisch" :props="props">
+            <q-badge :color="
+                props.value >= 180 ? 'purple' : 
+                props.value >= 140 ? 'red' : 
+                props.value >= 130 ? 'orange' : 
+                props.value >= 120 ? 'yellow' : 
+                'green'">
+                {{ props.value }}
+            </q-badge>
+        </q-td>
+    ''')
 
     table.add_slot('body-cell-Diastolisch', '''
-                <q-td key="diastolisch" :props="props">
-                    <q-badge :color="props.value > 80 ? 'red' : 'green'">
-                        {{ props.value }}
-                    </q-badge>
-                </q-td>
-            ''')
+        <q-td key="diastolisch" :props="props">
+            <q-badge :color="
+                props.value >= 110 ? 'purple' : 
+                props.value >= 100 ? 'red' : 
+                props.value >= 90 ? 'orange' : 
+                props.value >= 85 ? 'yellow' : 
+                'green'">
+                {{ props.value }}
+            </q-badge>
+        </q-td>
+    ''')
 
     table.add_slot('body-cell-Pulsdruck', '''
         <q-td key="pulsdruck" :props="props">
             <q-badge :color="props.value >= 90 ? 'red' : 
-                             props.value >= 76 ? 'orange' : 
-                             props.value >= 66 ? 'yellow' : 
+                             props.value >= 76 ? 'yellow' : 
+                             props.value >= 66 ? 'orange' : 
                              props.value >= 40 ? 'green' : 'grey'">
                 {{ props.value }}
             </q-badge>

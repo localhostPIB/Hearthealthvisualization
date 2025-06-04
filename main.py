@@ -23,6 +23,17 @@ def init_database():
 
 
 if __name__ in {"__main__", "__mp_main__"}:
+    """
+    Starts the actual application (Nicegui) using sys.argv you can set how the application should be started
+    
+    Arguments sys.argv[1]: Means whether you want to start the application in the browser or in its own window, 
+    the latter is often not possible under Ubuntu.
+    
+    Arguments sys.argv[2]: Specifies a port.
+    
+    Arguments sys.argv[3]: If the argv is set to automatic then nicegui searches for any free port in the system. 
+    Otherwise, enter the port specified by the user (from sys.argv[2]) Port
+    """ 
     init_database()
     build_gui()
 

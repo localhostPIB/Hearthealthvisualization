@@ -17,8 +17,12 @@ def validate_positive_integer(value: int) -> str | None:
         return 'Bitte geben Sie eine Zahl ein'
 
 
-def get_downloads_folder():
-    """Checks whether the operating system is a Windows or a Mac."""
+def get_downloads_folder() -> str:
+    """Checks whether the operating system is a Windows or a Mac.
+
+    :return: Download Path to the operating system.
+    :rtype: str | None
+    """
     if os.name == "nt":  # Windows
         return os.path.join(os.getenv('USERPROFILE'), "Downloads")
     return os.path.expanduser("~/Downloads")  # macOS/Linux

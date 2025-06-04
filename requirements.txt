@@ -1,10 +1,11 @@
-sqlalchemy~=1.4.44
-plotly~=5.13.0
-pandas~=1.5.3
-reportlab~=3.6.12
+sqlalchemy~=2.0.41
+plotly~=6.1.2
+pandas~=2.2.3
+reportlab~=4.4.1
 kaleido
 packaging
-nicegui
+nicegui~=2.19.0
 pywebview
-python-dotenv
+python-dotenv~=1.1.0
 numpy
+pillow~=11.2.1
