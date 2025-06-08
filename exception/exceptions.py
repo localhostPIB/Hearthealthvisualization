@@ -12,3 +12,11 @@ class NiceGUINotStartedException(Exception):
     def __init__(self, message):
         self.message = message
         super().__init__(self.message)
+
+
+class PDFNotCreatedException(Exception):
+    """This custom exception is thrown if the PDF cannot be created."""
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)

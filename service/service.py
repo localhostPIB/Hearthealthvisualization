@@ -4,12 +4,17 @@ import tempfile
 from typing import List, Any, LiteralString
 
 from plotly.graph_objs import Figure
+from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
+from PyPDF2 import PdfMerger
 import plotly.express as px
 import pandas as pd
+from reportlab.platypus import Table, TableStyle, SimpleDocTemplate
 
 from dao import save_heart, get_all_heart
+from exception import PDFNotCreatedException
 from gui.utils import get_downloads_folder
 from model import Heart
 
@@ -87,46 +92,95 @@ def make_line_plot_service(heart_list: List[Heart]) -> Figure:
     return fig
 
 
-def save_plot_to_document(plot: Figure, pdf_name=None, file_format=".pdf") -> LiteralString | str | bytes:
+def create_measurement_table(measurements: list[dict]) -> Table:
     """
-    Creates a document of the plot.
+    Creates a table with all heart values
+        
+    :param measurements: measurement list
+    :returns: Table with all heart values.
+    :rtype: Table
+    """
+    if not measurements:
+        return Table([["Keine Daten verfügbar"]])
 
-    :param plot: Plotly figure.
-    :param pdf_name: The name of the output PDF.
-    :param file_format: The format of the output document, default is '.pdf'.
-    :returns: The name of the output PDF.
-    :rtype: str
-    """
+    keys = ["Datum", "Systolisch", "Diastolisch", "Pulsdruck", "Puls"]
+    units = {
+        "Systolisch": "mmHg",
+        "Diastolisch": "mmHg",
+        "Pulsdruck": "mmHg",
+        "Puls": "bpm",
+        "Datum": ""
+    }
+
+    header = ["#"] + keys
+    table_data = [header]
+
+    for i, measurement in enumerate(measurements):
+        row = [f"Messung {i + 1}"]
+        for key in keys:
+            value = measurement.get(key, "")
+            einheit = units.get(key, "")
+            wert_str = f"{value} {einheit}" if einheit and value != "" else str(value)
+            row.append(wert_str)
+        table_data.append(row)
+
+    table = Table(table_data, colWidths=[3 * cm] + [3.5 * cm] * len(keys))
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#2e6da4")),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('ROWBACKGROUNDS', (1, 1), (-1, -1), [colors.whitesmoke, colors.lightgrey])
+    ]))
+
+    return table
+
+
+def save_health_data_to_document(plot: Figure, measured_values: dict, pdf_name=None) -> LiteralString | str | bytes:
     canvas_width, canvas_height = landscape(A4)
     now = datetime.now()
-    pdf_path = os.path.join(get_downloads_folder(), pdf_name + str(now.timestamp() * 1000) + file_format)
+    pdf_name = pdf_name or "plot"
 
-    if pdf_name is None:
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=file_format)
+    timestamp = str(int(now.timestamp() * 1000))
+    temp_dir = tempfile.gettempdir()
+    pdf_base = f"{pdf_name}_{timestamp}"
 
-    c = canvas.Canvas(pdf_path, pagesize=(canvas_width, canvas_height))
+    plot_pdf_path = os.path.join(temp_dir, f"{pdf_base}_plot.pdf")
+    table_pdf_path = os.path.join(temp_dir, f"{pdf_base}_table.pdf")
+    final_pdf_path = os.path.join(temp_dir, f"{pdf_base}.pdf")
 
     try:
+        c = canvas.Canvas(plot_pdf_path, pagesize=(canvas_width, canvas_height))
         img_bytes = plot.to_image(format="png", width=1000, height=600)
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_img:
             temp_img.write(img_bytes)
             temp_img.flush()
-            temp_name = temp_img.name
+            img_path = temp_img.name
 
-        desired_img_width = canvas_width
-        scaling_factor = desired_img_width / 1000
-        width = 1000 * scaling_factor
-        height = 600 * scaling_factor
-
-        x = (canvas_width - width) / 2
-        y = (canvas_height - height) / 2
-
-        c.drawImage(temp_name, x, y, width, height)
-        os.remove(temp_name)
-
+        scale = canvas_width / 1000
+        width, height = 1000 * scale, 600 * scale
+        x, y = (canvas_width - width) / 2, (canvas_height - height) / 2
+        c.drawImage(img_path, x, y, width, height)
+        c.showPage()
         c.save()
+        os.remove(img_path)
 
-        return pdf_path
-    except Exception as e:
-        raise RuntimeError(f"Fehler beim Erstellen der PDF: {e}")
+        doc = SimpleDocTemplate(table_pdf_path, pagesize=landscape(A4))
+        table = create_measurement_table(measured_values)
+        doc.build([table])
+
+        merger = PdfMerger()
+        merger.append(plot_pdf_path)
+        merger.append(table_pdf_path)
+        merger.write(final_pdf_path)
+        merger.close()
+        os.remove(plot_pdf_path)
+        os.remove(table_pdf_path)
+
+        return final_pdf_path
+
+    except PDFNotCreatedException as e:
+        raise e

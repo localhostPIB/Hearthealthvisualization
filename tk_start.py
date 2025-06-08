@@ -67,12 +67,13 @@ def start_app(port_entry, mode_var, disable_button, root):
         error_type = type(e).__name__
         messagebox.showerror("Fehler", f"{error_type}: {e}")
 
+
 def stop_app(root):
     """
     Closes the Nicegui app so that the system also releases the port. The tkinter program will also be closed.
     
     :param root: The added attributes are used to close the Nicegui process.
-    """ 
+    """
     if hasattr(root, "nicegui_process"):
         root.nicegui_process.terminate()
         root.nicegui_process.wait(timeout=1)

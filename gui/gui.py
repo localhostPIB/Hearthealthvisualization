@@ -6,7 +6,7 @@ from plotly.graph_objs import Figure
 
 from exception import HeathValueNotSaveException
 from gui.utils import validate_positive_integer
-from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_plot_to_document, \
+from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_health_data_to_document, \
     all_values_as_json_service
 
 table = None
@@ -136,9 +136,11 @@ def build_gui():
                                                                date_input, time_input)).classes('px-6 py-2 mt-2')
 
             with ui.tab_panel(two):
+                all_heart_values = get_all_heart_service()
+
                 ui.button('Speichere Plot als PDF',
-                          on_click=lambda: ui.download(save_plot_to_document(
-                              make_line_plot_service(get_all_heart_service()), "Hearth"))
+                          on_click=lambda: ui.download(save_health_data_to_document(
+                              make_line_plot_service(all_heart_values), all_values_as_json_service(all_heart_values), "Hearth"))
                           ).classes('px-6 py-2')
 
             with ui.tab_panel(three):
