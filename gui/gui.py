@@ -2,12 +2,13 @@ from datetime import datetime
 from typing import Final
 
 from nicegui import ui, app
-from plotly.graph_objs import Figure
+from plotly.graph_objs import Figure, Indicator
+import plotly.graph_objects as go
 
 from exception import HeathValueNotSaveException
-from gui.utils import validate_positive_integer
+from gui.utils import validate_positive_integer, validate_positive_float
 from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_health_data_to_document, \
-    all_values_as_json_service
+    all_values_as_json_service, make_gauge_chart_service, calc_bmi
 
 table = None
 plot = None
@@ -25,7 +26,7 @@ def save_values(diastolic_input, systolic_input, pulse_input, date=None, time=No
     :param pulse_input: Pulse of the blood pressure measurement.
     :param date: Date of measurement.
     :param time: Time of the measurement.
-    """ 
+    """
     global plot
 
     try:
@@ -93,54 +94,75 @@ def build_gui():
 
         with ui.tab_panels(tabs, value=one).classes('w-full'):
             with ui.tab_panel(one):
-                ui.label('Herzwerte Übersicht').classes('text-2xl font-bold mb-4')
+                with ui.expansion('Herzgesundheit', icon='monitor_heart').classes('w-full'):
+                    ui.label('Herzwerte Übersicht').classes('text-2xl font-bold mb-4')
 
-                with ui.row().classes('flex w-full items-start gap-4'):
-                    plot_container = ui.card().classes('w-fill p-8')
-                    input_container = ui.card().classes('w-1/5 p-8')
+                    with ui.row().classes('flex w-full items-start gap-4'):
+                        plot_container = ui.card().classes('w-fill p-8')
+                        input_container = ui.card().classes('w-1/5 p-8')
 
-                    with plot_container:
-                        if all_heart_values:
-                            raw_plot = make_line_plot_service(all_heart_values)
-                        else:
-                            from plotly.graph_objects import Figure
-                            raw_plot = Figure()
+                        with plot_container:
+                            if all_heart_values:
+                                raw_plot = make_line_plot_service(all_heart_values)
+                            else:
+                                from plotly.graph_objects import Figure
+                                raw_plot = Figure()
 
-                        plot = ui.plotly(raw_plot).classes('max-w-full h-auto')
+                            plot = ui.plotly(raw_plot).classes('max-w-full h-auto')
 
-                        if not all_heart_values:
-                            no_data_icon = ui.icon('info', color='grey', size='xl')
-                            no_data_label = ui.label('Keine Daten vorhanden').classes('text-lg text-gray-500')
+                            if not all_heart_values:
+                                no_data_icon = ui.icon('info', color='grey', size='xl')
+                                no_data_label = ui.label('Keine Daten vorhanden').classes('text-lg text-gray-500')
+
+                        with input_container:
+                            ui.label('Eingabe der Werte').classes('text-lg font-semibold mb-2')
+
+                            systolic_input = ui.input('Systolischer Wert', placeholder='1 - 999 mmHg',
+                                                      validation=validate_positive_integer).classes('w-full')
+
+                            diastolic_input = ui.input('Diastolischer Wert', placeholder='1 - 999 mmHg',
+                                                       validation=validate_positive_integer).classes('w-full')
+
+                            pulse_input = ui.input('Puls', placeholder='1 - 999 bpm',
+                                                   validation=validate_positive_integer).classes('w-full')
+
+                            ui.label("Gib Datum und Uhrzeit ein:")
+                            date_input = ui.input("Datum", placeholder="Tag.Monat.Jahr",
+                                                  value=current_date.today().date()
+                                                  .isoformat()).props('type=date').classes('w-full')
+
+                            time_input = ui.input("Uhrzeit", placeholder="hh:mm", value=current_date.now().
+                                                  strftime('%H:%M')).props('type=time').classes('w-full')
+
+                            ui.button('Werte speichern',
+                                      on_click=lambda: save_values(diastolic_input, systolic_input, pulse_input,
+                                                                   date_input, time_input)).classes('px-6 py-2 mt-2')
+
+                with ui.expansion('BMI', icon='run_circle').classes('w-full'):
+                    with ui.row().classes('flex w-full items-start gap-4'):
+                        plot_container = ui.card().classes('w-fill p-8')
+                        input_container = ui.card().classes('w-1/5 p-8')
 
                     with input_container:
                         ui.label('Eingabe der Werte').classes('text-lg font-semibold mb-2')
 
-                        systolic_input = ui.input('Systolischer Wert', placeholder='1 - 999 mmHg',
-                                                  validation=validate_positive_integer).classes('w-full')
+                        weight_input = ui.input('Körpergewicht (in kg)', placeholder='1 - 999 kg',
+                                                validation=validate_positive_float).classes('w-full')
 
-                        diastolic_input = ui.input('Diastolischer Wert', placeholder='1 - 999 mmHg',
-                                                   validation=validate_positive_integer).classes('w-full')
+                        size_input = ui.input('Körpergröße (in m )', placeholder='0.5 - 2.5 m',
+                                              validation=validate_positive_float).classes('w-full')
 
-                        pulse_input = ui.input('Puls', placeholder='1 - 999 bpm',
-                                               validation=validate_positive_integer).classes('w-full')
-
-                        ui.label("Gib Datum und Uhrzeit ein:")
-                        date_input = ui.input("Datum", placeholder="Tag.Monat.Jahr", value=current_date.today().date()
-                                              .isoformat()).props('type=date').classes('w-full')
-
-                        time_input = ui.input("Uhrzeit", placeholder="hh:mm", value=current_date.now().
-                                              strftime('%H:%M')).props('type=time').classes('w-full')
-
-                        ui.button('Werte speichern',
-                                  on_click=lambda: save_values(diastolic_input, systolic_input, pulse_input,
-                                                               date_input, time_input)).classes('px-6 py-2 mt-2')
+                        with plot_container:
+                            bmi_plot = make_gauge_chart_service(calc_bmi(112.9, 1.87)) #todo
+                            plot = ui.plotly(bmi_plot).classes('max-w-full h-auto')
 
             with ui.tab_panel(two):
                 all_heart_values = get_all_heart_service()
 
                 ui.button('Speichere Plot als PDF',
                           on_click=lambda: ui.download(save_health_data_to_document(
-                              make_line_plot_service(all_heart_values), all_values_as_json_service(all_heart_values), "Hearth"))
+                              make_line_plot_service(all_heart_values), all_values_as_json_service(all_heart_values),
+                              "Hearth"))
                           ).classes('px-6 py-2')
 
             with ui.tab_panel(three):

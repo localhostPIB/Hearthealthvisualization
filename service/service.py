@@ -3,7 +3,7 @@ import os
 import tempfile
 from typing import List, Any, LiteralString
 
-from plotly.graph_objs import Figure
+from plotly.graph_objs import Figure, Indicator
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import cm
@@ -15,7 +15,6 @@ from reportlab.platypus import Table, TableStyle, SimpleDocTemplate
 
 from dao import save_heart, get_all_heart
 from exception import PDFNotCreatedException
-from gui.utils import get_downloads_folder
 from model import Heart
 
 
@@ -44,7 +43,7 @@ def get_all_heart_service() -> list[Heart]:
     return get_all_heart()
 
 
-def all_values_as_json_service(all_values) -> list[dict[str, Any]]:
+def all_values_as_json_service(all_values: list) -> list[dict[str, Any]]:
     """
     Revised the blood pressure values for Nicegui as JSON.
 
@@ -61,6 +60,49 @@ def all_values_as_json_service(all_values) -> list[dict[str, Any]]:
         }
         for heart in all_values
     ]
+
+
+def calc_bmi(weight: float, height: float) -> float:
+    """
+    Calculates the current Body-Mass-Index (BMI).
+        
+    :param weight: the weight of the User in kg as float.
+    :param height: Body height of the User in m as float.
+    :returns: the BMI of the User.
+    :rtype: float
+    """
+    return weight / (height ** 2)
+
+
+def make_gauge_chart_service(bmi: float) -> Figure:
+    """
+    Creates a plot for the Body-Mass-Index (BMI) with Plotly based on the heart values.
+    BMI = weight / (height ** 2)
+
+    :param bmi: BMI value as float.
+    :returns: Plotly figure.
+    :rtype:  Figure
+    """
+    return Figure(Indicator(
+        mode="gauge+number",
+        value=bmi,
+        title={'text': "BMI"},
+        gauge={
+            'axis': {'range': [0, 40]},
+            'steps': [
+                {'range': [0, 18.5], 'color': "lightblue", 'name': "Untergewicht"},
+                {'range': [18.5, 24.9], 'color': "lightgreen", 'name': "Normalgewicht"},
+                {'range': [25, 29.9], 'color': "yellow", 'name': "Übergewicht"},
+                {'range': [30, 34.9], 'color': "orange", 'name': "Adipositas I"},
+                {'range': [35, 40], 'color': "red", 'name': "Adipositas II+"}
+            ],
+            'threshold': {
+                'line': {'color': "black", 'width': 4},
+                'thickness': 0.75,
+                'value': bmi
+            }
+        }
+    ))
 
 
 def make_line_plot_service(heart_list: List[Heart]) -> Figure:
