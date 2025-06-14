@@ -13,9 +13,9 @@ import plotly.express as px
 import pandas as pd
 from reportlab.platypus import Table, TableStyle, SimpleDocTemplate
 
-from dao import save_heart, get_all_heart
+from dao import save_heart, get_all_bmi, get_all_heart, save_bmi, delete_bmi
 from exception import PDFNotCreatedException
-from model import Heart
+from model import Heart, BMI
 
 
 def save_heart_service(systolic_bp: int, diastolic_bp: int, puls_frequency: int, date=None):
@@ -33,6 +33,16 @@ def save_heart_service(systolic_bp: int, diastolic_bp: int, puls_frequency: int,
         save_heart(Heart(systolic_BP=systolic_bp, diastolic_BP=diastolic_bp, puls_Frequency=puls_frequency, date=date))
 
 
+def save_bmi_service(weight: float, size: float):
+    """
+    Save the heart-object in the Database.
+
+    :param weight:
+    :param size:
+    """
+    save_bmi(BMI(weight=weight, size=size))
+
+
 def get_all_heart_service() -> list[Heart]:
     """
     Outputs all heart-objects in a list.
@@ -41,6 +51,16 @@ def get_all_heart_service() -> list[Heart]:
     :rtype: list
     """
     return get_all_heart()
+
+
+def get_all_bmi_service() -> list[BMI]:
+    """
+    Outputs all bmi-objects in a list.
+
+    :returns: List with all bmi-objects.
+    :rtype: list
+    """
+    return get_all_bmi()
 
 
 def all_values_as_json_service(all_values: list) -> list[dict[str, Any]]:
@@ -62,16 +82,13 @@ def all_values_as_json_service(all_values: list) -> list[dict[str, Any]]:
     ]
 
 
-def calc_bmi(weight: float, height: float) -> float:
+def delete_bmi_value(bmi_id: id):
     """
-    Calculates the current Body-Mass-Index (BMI).
+    Deletes the BMI entry in the database using the id in the database
         
-    :param weight: the weight of the User in kg as float.
-    :param height: Body height of the User in m as float.
-    :returns: the BMI of the User.
-    :rtype: float
+    :param bmi_id: the id of the BMI entry.
     """
-    return weight / (height ** 2)
+    delete_bmi(bmi_id)
 
 
 def make_gauge_chart_service(bmi: float) -> Figure:

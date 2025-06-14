@@ -6,8 +6,7 @@ from dotenv import load_dotenv
 
 from database import Database
 from gui import build_gui
-from model import Heart
-
+from model import Heart, BMI
 
 load_dotenv()
 
@@ -17,7 +16,7 @@ def init_database():
     SQLALCHEMY_DATABASE_URL = os.getenv('DATABASE_URL')
     db = Database(SQLALCHEMY_DATABASE_URL)
 
-    db.create_database(tables=[Heart.__table__])
+    db.create_database(tables=[Heart.__table__, BMI.__table__])
 
     return db
 

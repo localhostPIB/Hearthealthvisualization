@@ -3,7 +3,7 @@ import unittest
 from datetime import timedelta, datetime
 
 from main import init_database
-from service import save_heart_service
+from service import save_heart_service, save_bmi_service
 
 
 class MyTestCase(unittest.TestCase):
@@ -64,6 +64,8 @@ class MyTestCase(unittest.TestCase):
         save_heart_service(systolic_bp=117, diastolic_bp=70, puls_frequency=56)
         save_heart_service(systolic_bp=123, diastolic_bp=69, puls_frequency=62)
         save_heart_service(systolic_bp=123, diastolic_bp=77, puls_frequency=59)
+
+        save_bmi_service(weight=112.0, size=1.88)
 
 
 if __name__ == '__main__':

@@ -2,22 +2,34 @@ from datetime import datetime
 from typing import Final
 
 from nicegui import ui, app
-from plotly.graph_objs import Figure, Indicator
-import plotly.graph_objects as go
+from plotly.graph_objs import Figure
 
 from exception import HeathValueNotSaveException
 from gui.utils import validate_positive_integer, validate_positive_float
 from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_health_data_to_document, \
-    all_values_as_json_service, make_gauge_chart_service, calc_bmi
+    all_values_as_json_service, make_gauge_chart_service, save_bmi_service, get_all_bmi_service
 
 table = None
 plot = None
+bmi_plot = None
 raw_plot = None
 no_data_label = None
 no_data_icon = None
 
 
-def save_values(diastolic_input, systolic_input, pulse_input, date=None, time=None):
+def save_bmi_values(weight_input, size_input):
+    weight = float(weight_input.value)
+    size = float(size_input.value)
+
+    if validate_positive_float(weight) or validate_positive_float(size):
+        ui.notify('Bitte nur positive Werte eingeben!', color='red')
+        return
+
+    save_bmi_service(weight, size)
+    update_view()
+
+
+def save_heart_values(diastolic_input, systolic_input, pulse_input, date=None, time=None):
     """
     Here the new heart values are validated and forwarded to the service for storage, and the user receives feedback.
     
@@ -55,7 +67,7 @@ def update_view():
     """
     Gui elements are updated here as soon as something is added, such as the table, plot and the symbols/hints.
     """
-    global table, plot, raw_plot, no_data_label, no_data_icon
+    global table, plot, raw_plot, no_data_label, no_data_icon, bmi_plot
     all_heart_values: Final[list] = get_all_heart_service()
 
     if table:
@@ -69,18 +81,24 @@ def update_view():
         plot.figure.layout = new_fig.layout
         ui.update(plot)
 
-        if no_data_label and no_data_icon:
-            no_data_label.delete()
-            no_data_icon.delete()
-            no_data_label = None
-            no_data_icon = None
+    if bmi_plot:
+        new_bmi_plot: Final[Figure] = make_gauge_chart_service(get_all_bmi_service()[0].calc_bmi())
+        bmi_plot.figure = new_bmi_plot
+        bmi_plot.figure.layout = new_bmi_plot.layout
+        ui.update(bmi_plot)
+
+    if no_data_label and no_data_icon:
+        no_data_label.delete()
+        no_data_icon.delete()
+        no_data_label = None
+        no_data_icon = None
 
 
 def build_gui():
     """
     The gui is assembled here.
     """
-    global table, plot, raw_plot, no_data_label, no_data_icon, no_data_label
+    global table, plot, raw_plot, no_data_label, no_data_icon, no_data_label, bmi_plot
 
     ui.page_title('Gesundheitsmonitoring')
     current_date = datetime
@@ -135,7 +153,7 @@ def build_gui():
                                                   strftime('%H:%M')).props('type=time').classes('w-full')
 
                             ui.button('Werte speichern',
-                                      on_click=lambda: save_values(diastolic_input, systolic_input, pulse_input,
+                                      on_click=lambda: save_heart_values(diastolic_input, systolic_input, pulse_input,
                                                                    date_input, time_input)).classes('px-6 py-2 mt-2')
 
                 with ui.expansion('BMI', icon='run_circle').classes('w-full'):
@@ -152,9 +170,12 @@ def build_gui():
                         size_input = ui.input('Körpergröße (in m )', placeholder='0.5 - 2.5 m',
                                               validation=validate_positive_float).classes('w-full')
 
+                        ui.button('Werte speichern',
+                                  on_click=lambda: save_bmi_values(weight_input, size_input)).classes('px-6 py-2 mt-2')
+
                         with plot_container:
-                            bmi_plot = make_gauge_chart_service(calc_bmi(112.9, 1.87)) #todo
-                            plot = ui.plotly(bmi_plot).classes('max-w-full h-auto')
+                            raw_plot = make_gauge_chart_service(get_all_bmi_service()[0].calc_bmi())
+                            bmi_plot = ui.plotly(raw_plot).classes('max-w-full h-auto')
 
             with ui.tab_panel(two):
                 all_heart_values = get_all_heart_service()
