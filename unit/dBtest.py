@@ -65,7 +65,7 @@ class MyTestCase(unittest.TestCase):
         save_heart_service(systolic_bp=123, diastolic_bp=69, puls_frequency=62)
         save_heart_service(systolic_bp=123, diastolic_bp=77, puls_frequency=59)
 
-        save_bmi_service(weight=112.0, size=1.88)
+        save_bmi_service(weight=112.0, size=1.88, created_at=self._random_datetime(start_date, end_date))
 
 
 if __name__ == '__main__':

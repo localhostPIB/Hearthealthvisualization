@@ -7,7 +7,7 @@ from plotly.graph_objs import Figure
 from exception import HeathValueNotSaveException
 from gui.utils import validate_positive_integer, validate_positive_float
 from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_health_data_to_document, \
-    all_values_as_json_service, make_gauge_chart_service, save_bmi_service, get_all_bmi_service
+    all_values_as_json_service, make_gauge_chart_service, save_bmi_service, get_all_bmi_service, get_newest_bmi_service
 
 table = None
 plot = None
@@ -82,7 +82,7 @@ def update_view():
         ui.update(plot)
 
     if bmi_plot:
-        new_bmi_plot: Final[Figure] = make_gauge_chart_service(get_all_bmi_service()[0].calc_bmi())
+        new_bmi_plot: Final[Figure] = make_gauge_chart_service(get_newest_bmi_service().calc_bmi())
         bmi_plot.figure = new_bmi_plot
         bmi_plot.figure.layout = new_bmi_plot.layout
         ui.update(bmi_plot)
@@ -174,7 +174,7 @@ def build_gui():
                                   on_click=lambda: save_bmi_values(weight_input, size_input)).classes('px-6 py-2 mt-2')
 
                         with plot_container:
-                            raw_plot = make_gauge_chart_service(get_all_bmi_service()[0].calc_bmi())
+                            raw_plot = make_gauge_chart_service(get_newest_bmi_service().calc_bmi())
                             bmi_plot = ui.plotly(raw_plot).classes('max-w-full h-auto')
 
             with ui.tab_panel(two):

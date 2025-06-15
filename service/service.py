@@ -13,7 +13,7 @@ import plotly.express as px
 import pandas as pd
 from reportlab.platypus import Table, TableStyle, SimpleDocTemplate
 
-from dao import save_heart, get_all_bmi, get_all_heart, save_bmi, delete_bmi
+from dao import save_heart, get_all_bmi, get_all_heart, save_bmi, delete_bmi, get_newest_bmi
 from exception import PDFNotCreatedException
 from model import Heart, BMI
 
@@ -33,14 +33,15 @@ def save_heart_service(systolic_bp: int, diastolic_bp: int, puls_frequency: int,
         save_heart(Heart(systolic_BP=systolic_bp, diastolic_BP=diastolic_bp, puls_Frequency=puls_frequency, date=date))
 
 
-def save_bmi_service(weight: float, size: float):
+def save_bmi_service(weight: float, size: float, created_at=None):
     """
     Save the heart-object in the Database.
 
     :param weight:
     :param size:
+    :param date: the date of the measuring.
     """
-    save_bmi(BMI(weight=weight, size=size))
+    save_bmi(BMI(weight=weight, size=size, created_at=created_at))
 
 
 def get_all_heart_service() -> list[Heart]:
@@ -51,6 +52,10 @@ def get_all_heart_service() -> list[Heart]:
     :rtype: list
     """
     return get_all_heart()
+
+
+def get_newest_bmi_service() -> BMI:
+    return get_newest_bmi()
 
 
 def get_all_bmi_service() -> list[BMI]:

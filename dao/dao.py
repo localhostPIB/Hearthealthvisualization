@@ -1,4 +1,5 @@
 import os
+from typing import Final
 
 from dotenv import load_dotenv
 
@@ -12,11 +13,24 @@ SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 db = Database(SQLALCHEMY_DATABASE_URL)
 
 
+def get_newest_bmi():
+    try:
+        with db.session() as session:
+            bmi: Final[BMI] = session.query(BMI).order_by(BMI.created_at.desc()).first()
+
+            return bmi
+    except Exception as e:
+        print(e)
+        raise e
+    finally:
+        session.close()
+
+
 def save_bmi(bmi: BMI):
     """
     Stores the acute BMI value.
 
-    :param bmi: Heart-Object with heart value.
+    :param bmi: BMI-Object with heart value.
     """
     try:
         with db.session() as session:
