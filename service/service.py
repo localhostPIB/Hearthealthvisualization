@@ -202,7 +202,17 @@ def create_measurement_table(measurements: list[dict]) -> Table:
     return table
 
 
-def save_health_data_to_document(plot: Figure, measured_values: dict, pdf_name=None) -> LiteralString | str | bytes:
+def save_health_data_to_document(heart_plot: Figure, bmi_plot: Figure ,measured_values: dict, pdf_name=None) -> LiteralString | str | bytes:
+    """
+    Makes a PDF from the heart values, the BMI plot and the plot of the heart values.
+
+    :param heart_plot: The plot with the heart values.
+    :param bmi_plot: The plot with the BMI values.
+    :param measured_values: The heart values.
+    :param pdf_name: Name of the final PDF-file.
+    :returns: The path of the final PDF-file.
+    :rtype: LiteralString | str | bytes
+    """
     canvas_width, canvas_height = landscape(A4)
     now = datetime.now()
     pdf_name = pdf_name or "plot"
@@ -217,20 +227,22 @@ def save_health_data_to_document(plot: Figure, measured_values: dict, pdf_name=N
 
     try:
         c = canvas.Canvas(plot_pdf_path, pagesize=(canvas_width, canvas_height))
-        img_bytes = plot.to_image(format="png", width=1000, height=600)
+        img_bytes_heart = heart_plot.to_image(format="png", width=1000, height=600)
+        img_bytes_bmi = bmi_plot.to_image(format="png", width=1000, height=600)
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_img:
-            temp_img.write(img_bytes)
-            temp_img.flush()
-            img_path = temp_img.name
+        img_path_temp_bmi = _create_temp_file(img_bytes_bmi)
+        img_path_temp_heart = _create_temp_file(img_bytes_heart)
 
         scale = canvas_width / 1000
         width, height = 1000 * scale, 600 * scale
         x, y = (canvas_width - width) / 2, (canvas_height - height) / 2
-        c.drawImage(img_path, x, y, width, height)
+        c.drawImage(img_path_temp_heart, x, y, width, height)
+        c.showPage()
+        c.drawImage(img_path_temp_bmi, x, y, width, height)
         c.showPage()
         c.save()
-        os.remove(img_path)
+        os.remove(img_path_temp_heart)
+        os.remove(img_path_temp_bmi)
 
         doc = SimpleDocTemplate(table_pdf_path, pagesize=landscape(A4))
         table = create_measurement_table(measured_values)
@@ -248,3 +260,17 @@ def save_health_data_to_document(plot: Figure, measured_values: dict, pdf_name=N
 
     except PDFNotCreatedException as e:
         raise e
+
+
+def _create_temp_file(img_bytes):
+    """
+    Creates a temporary file for the diagrams (Plot).
+        
+    :param img_bytes: the plot as bytes.
+    :returns: The path of the temporary file.
+    :rtype: str
+    """
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_img:
+        temp_img.write(img_bytes)
+        temp_img.flush()
+        return temp_img.name

@@ -182,8 +182,9 @@ def build_gui():
 
                 ui.button('Speichere Plot als PDF',
                           on_click=lambda: ui.download(save_health_data_to_document(
-                              make_line_plot_service(all_heart_values), all_values_as_json_service(all_heart_values),
-                              "Hearth"))
+                              make_line_plot_service(all_heart_values),
+                              make_gauge_chart_service(get_newest_bmi_service().calc_bmi()), all_values_as_json_service(all_heart_values)
+                            ),"Health")
                           ).classes('px-6 py-2')
 
             with ui.tab_panel(three):
