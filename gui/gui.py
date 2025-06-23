@@ -13,7 +13,10 @@ table = None
 plot = None
 bmi_plot = None
 raw_plot = None
+bmi_label = None
+no_data_label_bmi = None
 no_data_label = None
+no_data_icon_bmi = None
 no_data_icon = None
 
 
@@ -39,7 +42,6 @@ def save_heart_values(diastolic_input, systolic_input, pulse_input, date=None, t
     :param date: Date of measurement.
     :param time: Time of the measurement.
     """
-    global plot
 
     try:
         diastolic = int(diastolic_input.value)
@@ -67,38 +69,48 @@ def update_view():
     """
     Gui elements are updated here as soon as something is added, such as the table, plot and the symbols/hints.
     """
-    global table, plot, raw_plot, no_data_label, no_data_icon, bmi_plot
+    global table, plot, raw_plot, no_data_label, no_data_icon, bmi_plot, bmi_label, no_data_icon_bmi, no_data_label_bmi
     all_heart_values: Final[list] = get_all_heart_service()
+    all_bmi_values: Final[list] = get_all_bmi_service()
 
-    if table:
+    if table and all_heart_values:
         table.rows = all_values_as_json_service(all_heart_values)
         table.update()
         add_label()
 
-    if plot:
+    if plot and all_heart_values:
         new_fig: Final[Figure] = make_line_plot_service(get_all_heart_service())
         plot.figure = new_fig
         plot.figure.layout = new_fig.layout
         ui.update(plot)
 
-    if bmi_plot:
+        if no_data_label and no_data_icon:
+            no_data_label.delete()
+            no_data_icon.delete()
+            no_data_label = None
+            no_data_icon = None
+
+    if bmi_plot and all_bmi_values:
         new_bmi_plot: Final[Figure] = make_gauge_chart_service(get_newest_bmi_service().calc_bmi())
         bmi_plot.figure = new_bmi_plot
         bmi_plot.figure.layout = new_bmi_plot.layout
         ui.update(bmi_plot)
+        #bmi_label.set_text(f"Bei einer Körpergröße von: {get_newest_bmi_service().size}m "
+         #                                f"wiegen Sie {get_newest_bmi_service().weight}kg")
 
-    if no_data_label and no_data_icon:
-        no_data_label.delete()
-        no_data_icon.delete()
-        no_data_label = None
-        no_data_icon = None
+        if no_data_label_bmi:
+            no_data_icon_bmi.delete()
+            no_data_label_bmi.delete()
+            no_data_icon_bmi = None
+            no_data_label_bmi = None
+
 
 
 def build_gui():
     """
     The gui is assembled here.
     """
-    global table, plot, raw_plot, no_data_label, no_data_icon, no_data_label, bmi_plot
+    global table, plot, raw_plot, no_data_label_bmi ,no_data_label, no_data_icon, no_data_label,no_data_icon_bmi ,bmi_plot, bmi_label
 
     ui.page_title('Gesundheitsmonitoring')
     current_date = datetime
@@ -156,26 +168,46 @@ def build_gui():
                                       on_click=lambda: save_heart_values(diastolic_input, systolic_input, pulse_input,
                                                                    date_input, time_input)).classes('px-6 py-2 mt-2')
 
-                with ui.expansion('BMI', icon='run_circle').classes('w-full'):
-                    with ui.row().classes('flex w-full items-start gap-4'):
-                        plot_container = ui.card().classes('w-fill p-8')
-                        input_container = ui.card().classes('w-1/5 p-8')
-
-                    with input_container:
-                        ui.label('Eingabe der Werte').classes('text-lg font-semibold mb-2')
-
-                        weight_input = ui.input('Körpergewicht (in kg)', placeholder='1 - 999 kg',
-                                                validation=validate_positive_float).classes('w-full')
-
-                        size_input = ui.input('Körpergröße (in m )', placeholder='0.5 - 2.5 m',
-                                              validation=validate_positive_float).classes('w-full')
-
-                        ui.button('Werte speichern',
-                                  on_click=lambda: save_bmi_values(weight_input, size_input)).classes('px-6 py-2 mt-2')
+                with ui.expansion("Übersicht Body Mass Index", icon='run_circle').classes('w-full'):
+                    ui.label('Übersicht Body Mass Index (BMI) Übersicht').classes('text-2xl font-bold mb-4')
+                    with ui.row().classes('flex w-full flex-wrap justify-between gap-1'):
+                        plot_container = ui.card().classes('w-[50%] min-h-[400px] p-6 flex flex-col items-center justify-center')
+                        input_container = ui.card().classes('w-[40%] min-h-[400px] p-6 flex flex-col justify-between')
 
                         with plot_container:
-                            raw_plot = make_gauge_chart_service(get_newest_bmi_service().calc_bmi())
-                            bmi_plot = ui.plotly(raw_plot).classes('max-w-full h-auto')
+                            bmi = get_newest_bmi_service()
+                            if not bmi:
+                                no_data_icon_bmi = ui.icon('info', color='grey', size='xl')
+                                no_data_label_bmi = ui.label('Keine Daten vorhanden').classes('text-lg text-gray-500')
+                                bmi_raw_plot = make_gauge_chart_service(0)
+                            else:
+                                bmi_raw_plot = make_gauge_chart_service(get_newest_bmi_service().calc_bmi())
+                                #ui.image('resources/static/img/body_img.png').classes('max-h-100')
+                                ui.label(f"Bei einer Körpergröße von: {bmi.size} m wiegen Sie {bmi.weight} kg").classes(
+                                'text-center')
+
+                            bmi_plot = ui.plotly(bmi_raw_plot).classes('w-full max-w-[500px] h-[500px]')
+
+                        with input_container:
+                            ui.label('Eingabe der Werte').classes('text-lg font-semibold mb-4')
+
+                            weight_input = ui.input(
+                                'Körpergewicht (in kg)',
+                                placeholder='1 - 999 kg',
+                                validation=validate_positive_float
+                            ).classes('w-full mb-2')
+
+                            size_input = ui.input(
+                                'Körpergröße (in m)',
+                                placeholder='0.5 - 2.5 m',
+                                validation=validate_positive_float
+                            ).classes('w-full mb-4')
+
+                            ui.button(
+                                'Werte speichern',
+                                on_click=lambda: save_bmi_values(weight_input, size_input)
+                            ).classes('px-6 py-2 self-start')
+
 
             with ui.tab_panel(two):
                 all_heart_values = get_all_heart_service()
@@ -183,8 +215,8 @@ def build_gui():
                 ui.button('Speichere Plot als PDF',
                           on_click=lambda: ui.download(save_health_data_to_document(
                               make_line_plot_service(all_heart_values),
-                              make_gauge_chart_service(get_newest_bmi_service().calc_bmi()), all_values_as_json_service(all_heart_values)
-                            ),"Health")
+                              make_gauge_chart_service(get_newest_bmi_service().calc_bmi()),
+                              all_values_as_json_service(all_heart_values)),"Health")
                           ).classes('px-6 py-2')
 
             with ui.tab_panel(three):

@@ -16,6 +16,7 @@ from reportlab.platypus import Table, TableStyle, SimpleDocTemplate
 from dao import save_heart, get_all_bmi, get_all_heart, save_bmi, delete_bmi, get_newest_bmi
 from exception import PDFNotCreatedException
 from model import Heart, BMI
+from .utils import create_temp_file
 
 
 def save_heart_service(systolic_bp: int, diastolic_bp: int, puls_frequency: int, date=None):
@@ -230,8 +231,8 @@ def save_health_data_to_document(heart_plot: Figure, bmi_plot: Figure ,measured_
         img_bytes_heart = heart_plot.to_image(format="png", width=1000, height=600)
         img_bytes_bmi = bmi_plot.to_image(format="png", width=1000, height=600)
 
-        img_path_temp_bmi = _create_temp_file(img_bytes_bmi)
-        img_path_temp_heart = _create_temp_file(img_bytes_heart)
+        img_path_temp_bmi = create_temp_file(img_bytes_bmi)
+        img_path_temp_heart = create_temp_file(img_bytes_heart)
 
         scale = canvas_width / 1000
         width, height = 1000 * scale, 600 * scale
@@ -260,17 +261,3 @@ def save_health_data_to_document(heart_plot: Figure, bmi_plot: Figure ,measured_
 
     except PDFNotCreatedException as e:
         raise e
-
-
-def _create_temp_file(img_bytes):
-    """
-    Creates a temporary file for the diagrams (Plot).
-        
-    :param img_bytes: the plot as bytes.
-    :returns: The path of the temporary file.
-    :rtype: str
-    """
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_img:
-        temp_img.write(img_bytes)
-        temp_img.flush()
-        return temp_img.name
