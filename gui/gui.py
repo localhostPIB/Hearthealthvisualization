@@ -105,18 +105,67 @@ def update_view():
             no_data_label_bmi = None
 
 
-
-def build_gui():
+def build_stepper():
     """
-    The gui is assembled here.
+    If the database is empty, a short interactive question is asked.
     """
-    global table, plot, raw_plot, no_data_label_bmi ,no_data_label, no_data_icon, no_data_label,no_data_icon_bmi ,bmi_plot, bmi_label
+    size_input = None
+    weight_input = None
 
-    ui.page_title('Gesundheitsmonitoring')
+    stepper_container = ui.column()
+    result_container = ui.grid(columns=1).classes('justify-center items-center w-full').classes('hidden')
+
+    with stepper_container:
+        with ui.stepper().props('vertical').classes('w-full') as stepper:
+            with ui.step('BMI: Körpergröße'):
+                ui.label('Bitte geben Sie Ihre Körpergröße in m ein:')
+                size_input = ui.input(
+                    'Körpergröße (in m)',
+                    placeholder='0.5 - 2.5 m',
+                    validation=validate_positive_float
+                )
+
+                def go_to_next_if_valid():
+                    if size_input.validate():
+                        stepper.next()
+
+                with ui.stepper_navigation():
+                    ui.button('Weiter', on_click=go_to_next_if_valid)
+
+            with ui.step('BMI: Gewicht'):
+                ui.label('Bitte geben Sie Ihr Gewicht in kg ein:')
+                weight_input = ui.input(
+                    'Körpergewicht (in kg)',
+                    placeholder='1 - 999 kg',
+                    validation=validate_positive_float
+                )
+
+                def finish_if_valid():
+                    if weight_input.validate():
+                        save_bmi_values(weight_input, size_input)
+                        stepper_container.classes('hidden')
+                        result_container.classes(remove='hidden')
+                        with result_container:
+                            build_grid_view()
+
+
+                with ui.stepper_navigation():
+                    ui.button('Zurück', on_click=stepper.previous).props('flat')
+                    ui.button('Fertigstellen', on_click=finish_if_valid)
+
+
+def build_grid_view():
+    global table, plot, raw_plot, no_data_label_bmi, no_data_label, no_data_icon, no_data_label, no_data_icon_bmi, \
+        bmi_plot, bmi_label
+
+    result_container = ui.grid(columns=1).classes('justify-center items-center w-full')
+
     current_date = datetime
     all_heart_values = get_all_heart_service()
+    all_bmi_values = get_all_bmi_service()
 
-    with (ui.grid(columns=1).classes('justify-center items-center w-full')):
+    with result_container:
+    #with (ui.grid(columns=1).classes('justify-center items-center w-full')):
         with ui.tabs().classes('w-full') as tabs:
             one = ui.tab('Plot', icon='stacked_line_chart')
             two = ui.tab('Speichern', icon='save_as')
@@ -166,12 +215,14 @@ def build_gui():
 
                             ui.button('Werte speichern',
                                       on_click=lambda: save_heart_values(diastolic_input, systolic_input, pulse_input,
-                                                                   date_input, time_input)).classes('px-6 py-2 mt-2')
+                                                                         date_input, time_input)).classes(
+                                'px-6 py-2 mt-2')
 
                 with ui.expansion("Übersicht Body Mass Index", icon='run_circle').classes('w-full'):
                     ui.label('Übersicht Body Mass Index (BMI) Übersicht').classes('text-2xl font-bold mb-4')
                     with ui.row().classes('flex w-full flex-wrap justify-between gap-1'):
-                        plot_container = ui.card().classes('w-[50%] min-h-[400px] p-6 flex flex-col items-center justify-center')
+                        plot_container = ui.card().classes(
+                            'w-[50%] min-h-[400px] p-6 flex flex-col items-center justify-center')
                         input_container = ui.card().classes('w-[40%] min-h-[400px] p-6 flex flex-col justify-between')
 
                         with plot_container:
@@ -182,9 +233,9 @@ def build_gui():
                                 bmi_raw_plot = make_gauge_chart_service(0)
                             else:
                                 bmi_raw_plot = make_gauge_chart_service(get_newest_bmi_service().calc_bmi())
-                                #ui.image('resources/static/img/body_img.png').classes('max-h-100')
+                                # ui.image('resources/static/img/body_img.png').classes('max-h-100')
                                 ui.label(f"Bei einer Körpergröße von: {bmi.size} m wiegen Sie {bmi.weight} kg").classes(
-                                'text-center')
+                                    'text-center')
 
                             bmi_plot = ui.plotly(bmi_raw_plot).classes('w-full max-w-[500px] h-[500px]')
 
@@ -208,7 +259,6 @@ def build_gui():
                                 on_click=lambda: save_bmi_values(weight_input, size_input)
                             ).classes('px-6 py-2 self-start')
 
-
             with ui.tab_panel(two):
                 all_heart_values = get_all_heart_service()
 
@@ -216,7 +266,7 @@ def build_gui():
                           on_click=lambda: ui.download(save_health_data_to_document(
                               make_line_plot_service(all_heart_values),
                               make_gauge_chart_service(get_newest_bmi_service().calc_bmi()),
-                              all_values_as_json_service(all_heart_values)),"Health")
+                              all_values_as_json_service(all_heart_values)), "Health")
                           ).classes('px-6 py-2')
 
             with ui.tab_panel(three):
@@ -225,7 +275,7 @@ def build_gui():
                     {'name': 'Systolisch', 'label': 'Systolisch', 'field': 'Systolisch'},
                     {'name': 'Diastolisch', 'label': 'Diastolisch', 'field': 'Diastolisch'},
                     {'name': 'Pulsdruck', 'label': 'Pulsdruck', 'field': 'Pulsdruck'},
-                    {'name': 'Puls', 'label': 'Puls', 'field': 'Puls'},
+                    {'na    me': 'Puls', 'label': 'Puls', 'field': 'Puls'},
                 ]
                 if all_heart_values:
                     table = ui.table(columns=columns, rows=all_values_as_json_service(all_heart_values), pagination=10,
@@ -235,6 +285,33 @@ def build_gui():
                     table = ui.table(columns=columns, rows=[], pagination=10,
                                      on_pagination_change=lambda e: ui.notify(e.value))
         ui.button('App schließen', on_click=lambda: app.shutdown()).classes('bg-red-500 text-white px-6 py-2')
+
+
+def build_gui():
+    """
+    The gui is assembled here.
+    """
+    global table, plot, raw_plot, no_data_label_bmi ,no_data_label, no_data_icon, no_data_label,no_data_icon_bmi ,bmi_plot, bmi_label
+
+    ui.page_title('Gesundheitsmonitoring')
+
+    dark = ui.dark_mode()
+
+    def toggle_dark_mode(e):
+        if e.value:
+            dark.enable()
+        else:
+            dark.disable()
+
+    with ui.row().classes('items-center gap-4'):
+        ui.icon('light_mode').classes('text-yellow-500 text-2xl')
+        ui.switch(on_change=toggle_dark_mode).bind_value_to(dark, 'enabled')
+        ui.icon('dark_mode').classes('text-indigo-400 text-2xl')
+
+    if not get_all_bmi_service() and not get_all_heart_service():
+        build_stepper()
+    else:
+       build_grid_view()
 
 
 def add_label():
