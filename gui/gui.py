@@ -5,6 +5,8 @@ from nicegui import ui, app
 from plotly.graph_objs import Figure
 
 from exception import HeathValueNotSaveException
+from gui import gui_utils
+from gui.gui_utils import add_label
 from gui.utils import validate_positive_integer, validate_positive_float
 from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_health_data_to_document, \
     all_values_as_json_service, make_gauge_chart_service, save_bmi_service, get_all_bmi_service, get_newest_bmi_service
@@ -35,7 +37,7 @@ def save_bmi_values(weight_input, size_input):
 def save_heart_values(diastolic_input, systolic_input, pulse_input, date=None, time=None):
     """
     Here the new heart values are validated and forwarded to the service for storage, and the user receives feedback.
-    
+
     :param diastolic_input: Diastolic value of the blood pressure measurement.
     :param systolic_input: Systolic value of the blood pressure measurement.
     :param pulse_input: Pulse of the blood pressure measurement.
@@ -76,7 +78,7 @@ def update_view():
     if table and all_heart_values:
         table.rows = all_values_as_json_service(all_heart_values)
         table.update()
-        add_label()
+        add_label(table)
 
     if plot and all_heart_values:
         new_fig: Final[Figure] = make_line_plot_service(get_all_heart_service())
@@ -95,8 +97,7 @@ def update_view():
         bmi_plot.figure = new_bmi_plot
         bmi_plot.figure.layout = new_bmi_plot.layout
         ui.update(bmi_plot)
-        #bmi_label.set_text(f"Bei einer Körpergröße von: {get_newest_bmi_service().size}m "
-         #                                f"wiegen Sie {get_newest_bmi_service().weight}kg")
+
 
         if no_data_label_bmi:
             no_data_icon_bmi.delete()
@@ -148,7 +149,6 @@ def build_stepper():
                         with result_container:
                             build_grid_view()
 
-
                 with ui.stepper_navigation():
                     ui.button('Zurück', on_click=stepper.previous).props('flat')
                     ui.button('Fertigstellen', on_click=finish_if_valid)
@@ -162,10 +162,8 @@ def build_grid_view():
 
     current_date = datetime
     all_heart_values = get_all_heart_service()
-    all_bmi_values = get_all_bmi_service()
 
     with result_container:
-    #with (ui.grid(columns=1).classes('justify-center items-center w-full')):
         with ui.tabs().classes('w-full') as tabs:
             one = ui.tab('Plot', icon='stacked_line_chart')
             two = ui.tab('Speichern', icon='save_as')
@@ -280,7 +278,7 @@ def build_grid_view():
                 if all_heart_values:
                     table = ui.table(columns=columns, rows=all_values_as_json_service(all_heart_values), pagination=10,
                                      on_pagination_change=lambda e: ui.notify(e.value))
-                    add_label()
+                    add_label(table)
                 else:
                     table = ui.table(columns=columns, rows=[], pagination=10,
                                      on_pagination_change=lambda e: ui.notify(e.value))
@@ -291,98 +289,14 @@ def build_gui():
     """
     The gui is assembled here.
     """
-    global table, plot, raw_plot, no_data_label_bmi ,no_data_label, no_data_icon, no_data_label,no_data_icon_bmi ,bmi_plot, bmi_label
+    global table, plot, raw_plot, no_data_label_bmi, no_data_label, no_data_icon, no_data_label, no_data_icon_bmi, \
+        bmi_plot, bmi_label
 
     ui.page_title('Gesundheitsmonitoring')
 
-    dark = ui.dark_mode()
-
-    def toggle_dark_mode(e):
-        if e.value:
-            dark.enable()
-        else:
-            dark.disable()
-
-    with ui.row().classes('items-center gap-4'):
-        ui.icon('light_mode').classes('text-yellow-500 text-2xl')
-        ui.switch(on_change=toggle_dark_mode).bind_value_to(dark, 'enabled')
-        ui.icon('dark_mode').classes('text-indigo-400 text-2xl')
+    gui_utils.set_dark_mode()
 
     if not get_all_bmi_service() and not get_all_heart_service():
         build_stepper()
     else:
-       build_grid_view()
-
-
-def add_label():
-    """
-    Adds label to show the user which values are okay and which are too high
-
-    Pulse:
-    Blue: Bradycardia (<60)
-    Green: Normal (60-100)
-    Orange: Mild tachycardia (101-120)
-    Red: Severe tachycardia (>120)
-
-    Systolic:
-    Green: Normal (<120)
-    Yellow: High-normal (120-129)
-    Orange: Grade 1 hypertension (130-139)
-    Red: Grade 2 hypertension (140-179)
-    Purple: Grade 3 hypertension (≥180)
-
-    Diastolic:
-    Green: Normal (<85)
-    Yellow: High-normal (85-89)
-    Orange: Hypertension grade 1 (90-99)
-    Red: Hypertension grade 2 (100-109)
-    Violet (purple): Grade 3 hypertension (≥110)
-    """
-    table.add_slot('body-cell-Puls', '''
-        <q-td key="puls" :props="props">
-            <q-badge :color="
-                props.value > 120 ? 'red' :
-                props.value > 100 ? 'orange' :
-                props.value < 60 ? 'blue' :
-                'green'">
-                {{ props.value }}
-            </q-badge>
-        </q-td>
-    ''')
-
-    table.add_slot('body-cell-Systolisch', '''
-        <q-td key="systolisch" :props="props">
-            <q-badge :color="
-                props.value >= 180 ? 'purple' : 
-                props.value >= 140 ? 'red' : 
-                props.value >= 130 ? 'orange' : 
-                props.value >= 120 ? 'yellow' : 
-                'green'">
-                {{ props.value }}
-            </q-badge>
-        </q-td>
-    ''')
-
-    table.add_slot('body-cell-Diastolisch', '''
-        <q-td key="diastolisch" :props="props">
-            <q-badge :color="
-                props.value >= 110 ? 'purple' : 
-                props.value >= 100 ? 'red' : 
-                props.value >= 90 ? 'orange' : 
-                props.value >= 85 ? 'yellow' : 
-                'green'">
-                {{ props.value }}
-            </q-badge>
-        </q-td>
-    ''')
-
-    table.add_slot('body-cell-Pulsdruck', '''
-        <q-td key="pulsdruck" :props="props">
-            <q-badge :color="props.value >= 90 ? 'red' : 
-                             props.value >= 76 ? 'yellow' : 
-                             props.value >= 66 ? 'orange' : 
-                             props.value >= 40 ? 'green' : 'grey'">
-                {{ props.value }}
-            </q-badge>
-        </q-td>
-    ''')
+        build_grid_view()
