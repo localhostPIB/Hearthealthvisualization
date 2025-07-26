@@ -8,8 +8,10 @@ from exception import HeathValueNotSaveException
 from gui import gui_utils
 from gui.gui_utils import add_label
 from gui.utils import validate_positive_integer, validate_positive_float
+from model import GenderEnum, User
 from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_health_data_to_document, \
-    all_values_as_json_service, make_gauge_chart_service, save_bmi_service, get_all_bmi_service, get_newest_bmi_service
+    all_values_as_json_service, make_gauge_chart_service, save_bmi_service, get_all_bmi_service, get_newest_bmi_service, \
+    save_user_service
 
 table = None
 plot = None
@@ -22,7 +24,7 @@ no_data_icon_bmi = None
 no_data_icon = None
 
 
-def save_bmi_values(weight_input, size_input):
+def save_bmi_values(weight_input, size_input, user_id):
     weight = float(weight_input.value)
     size = float(size_input.value)
 
@@ -30,8 +32,20 @@ def save_bmi_values(weight_input, size_input):
         ui.notify('Bitte nur positive Werte eingeben!', color='red')
         return
 
-    save_bmi_service(weight, size)
+    save_bmi_service(weight, size, user_id)
     update_view()
+
+def save_user_values(name_input, gender_select, age_input):
+    name = name_input.value
+    gender = gender_select.value
+    age = int(age_input.value)
+
+    user = User(name=name, age=age, gender=gender[0])
+
+    user_id = save_user_service(user)
+
+    ui.notify(f'Name: {name}, Geschlecht: {gender}, Alter: {age}', color='green')
+    return user_id
 
 
 def save_heart_values(diastolic_input, systolic_input, pulse_input, date=None, time=None):
@@ -59,7 +73,6 @@ def save_heart_values(diastolic_input, systolic_input, pulse_input, date=None, t
                 or validate_positive_integer(pulse)):
             ui.notify('Bitte nur positive Werte eingeben!', color='red')
             return
-
         save_heart_service(systolic, diastolic, pulse, date)
         update_view()
         ui.notify(f'Diastolisch: {diastolic}, Systolisch: {systolic}, Puls: {pulse}', color='green')
@@ -118,6 +131,18 @@ def build_stepper():
 
     with stepper_container:
         with ui.stepper().props('vertical').classes('w-full') as stepper:
+            with ui.step('Allgemeine Daten: Name, Geschlecht, Alter').classes('w-full'):
+                name_input = ui.input('Name', validation=lambda value: 'Bitte geben Sie ihren Namen ein' if len(value) < 2 else None)
+                gender_select = gender_select = ui.select(options=[(e.name, e) for e in GenderEnum],label='Gender')
+                age_input = ui.input('Alter', validation=validate_positive_float)
+
+                def go_to_next_if_valid():
+                    if age_input.validate() and gender_select.validate() and name_input.validate():
+                        stepper.next()
+
+                with ui.stepper_navigation():
+                    ui.button('Weiter', on_click=go_to_next_if_valid)
+
             with ui.step('BMI: Körpergröße'):
                 ui.label('Bitte geben Sie Ihre Körpergröße in m ein:')
                 size_input = ui.input(
@@ -143,7 +168,8 @@ def build_stepper():
 
                 def finish_if_valid():
                     if weight_input.validate():
-                        save_bmi_values(weight_input, size_input)
+                        user_id = save_user_values(name_input, gender_select, age_input)
+                        save_bmi_values(weight_input, size_input, user_id)
                         stepper_container.classes('hidden')
                         result_container.classes(remove='hidden')
                         with result_container:

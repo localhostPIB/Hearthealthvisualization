@@ -4,7 +4,7 @@ from typing import Final
 from dotenv import load_dotenv
 
 from exception import HeathValueNotSaveException, BMIValueNotSaveException
-from model import Heart, BMI
+from model import Heart, BMI, User
 from database import Database
 
 load_dotenv()
@@ -136,3 +136,19 @@ def get_all_bmi() -> list[Heart]:
         raise e
     finally:
         session.close()
+
+def save_user(user: User) -> int:
+    """
+    Stores the User and returns the generated ID.
+
+    :param user: User-Object.
+    :return: ID of the saved user.
+    """
+    try:
+        with db.session() as session:
+            session.add(user)
+            session.commit()
+            return user.id
+    except BMIValueNotSaveException as e:
+        print(e)
+        raise e
