@@ -5,6 +5,13 @@ class HeathValueNotSaveException(Exception):
         self.message = message
         super().__init__(self.message)
 
+class UserNotSaveException(Exception):
+    """This custom exception is thrown if the user not saves."""
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
 
 class BMIValueNotSaveException(Exception):
     """This custom exception is thrown if the BMI value not saves."""

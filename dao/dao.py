@@ -3,7 +3,7 @@ from typing import Final
 
 from dotenv import load_dotenv
 
-from exception import HeathValueNotSaveException, BMIValueNotSaveException
+from exception import HeathValueNotSaveException, BMIValueNotSaveException, UserNotSaveException
 from model import Heart, BMI, User
 from database import Database
 
@@ -13,7 +13,19 @@ SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 db = Database(SQLALCHEMY_DATABASE_URL)
 
 
-def get_newest_bmi():
+def get_all_users() -> list[User]:
+    try:
+        with db.session() as session:
+            users: Final[list[User]] = session.query(User).all()
+
+            return users
+    except UserNotSaveException as e:
+        print(e)
+        raise e
+    finally:
+        session.close()
+
+def get_newest_bmi() -> list[BMI]:
     try:
         with db.session() as session:
             bmi: Final[BMI] = session.query(BMI).order_by(BMI.created_at.desc()).first()

@@ -12,6 +12,7 @@ from model import GenderEnum, User
 from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_health_data_to_document, \
     all_values_as_json_service, make_gauge_chart_service, save_bmi_service, get_all_bmi_service, get_newest_bmi_service, \
     save_user_service
+from service.service import get_user_service
 
 table = None
 plot = None
@@ -22,6 +23,7 @@ no_data_label_bmi = None
 no_data_label = None
 no_data_icon_bmi = None
 no_data_icon = None
+user_id = None
 
 
 def save_bmi_values(weight_input, size_input, user_id):
@@ -43,12 +45,12 @@ def save_user_values(name_input, gender_select, age_input):
     user = User(name=name, age=age, gender=gender[0])
 
     user_id = save_user_service(user)
-
     ui.notify(f'Name: {name}, Geschlecht: {gender}, Alter: {age}', color='green')
+
     return user_id
 
 
-def save_heart_values(diastolic_input, systolic_input, pulse_input, date=None, time=None):
+def save_heart_values(user_id, diastolic_input, systolic_input, pulse_input, date=None, time=None):
     """
     Here the new heart values are validated and forwarded to the service for storage, and the user receives feedback.
 
@@ -73,7 +75,7 @@ def save_heart_values(diastolic_input, systolic_input, pulse_input, date=None, t
                 or validate_positive_integer(pulse)):
             ui.notify('Bitte nur positive Werte eingeben!', color='red')
             return
-        save_heart_service(systolic, diastolic, pulse, date)
+        save_heart_service(user_id, systolic, diastolic, pulse, date)
         update_view()
         ui.notify(f'Diastolisch: {diastolic}, Systolisch: {systolic}, Puls: {pulse}', color='green')
     except HeathValueNotSaveException as e:
@@ -167,6 +169,8 @@ def build_stepper():
                 )
 
                 def finish_if_valid():
+                    global user_id
+
                     if weight_input.validate():
                         user_id = save_user_values(name_input, gender_select, age_input)
                         save_bmi_values(weight_input, size_input, user_id)
@@ -236,9 +240,8 @@ def build_grid_view():
 
                             time_input = ui.input("Uhrzeit", placeholder="hh:mm", value=current_date.now().
                                                   strftime('%H:%M')).props('type=time').classes('w-full')
-
                             ui.button('Werte speichern',
-                                      on_click=lambda: save_heart_values(diastolic_input, systolic_input, pulse_input,
+                                      on_click=lambda: save_heart_values(get_user_service()[0].id, diastolic_input, systolic_input, pulse_input,
                                                                          date_input, time_input)).classes(
                                 'px-6 py-2 mt-2')
 
@@ -280,7 +283,7 @@ def build_grid_view():
 
                             ui.button(
                                 'Werte speichern',
-                                on_click=lambda: save_bmi_values(weight_input, size_input)
+                                on_click=lambda: save_bmi_values(weight_input, size_input, get_user_service()[0].id)
                             ).classes('px-6 py-2 self-start')
 
             with ui.tab_panel(two):

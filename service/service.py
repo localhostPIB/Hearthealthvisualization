@@ -13,13 +13,13 @@ import plotly.express as px
 import pandas as pd
 from reportlab.platypus import Table, TableStyle, SimpleDocTemplate
 
-from dao import save_heart, get_all_bmi, get_all_heart, save_bmi, delete_bmi, get_newest_bmi, save_user
+from dao import save_heart, get_all_bmi, get_all_heart, save_bmi, delete_bmi, get_newest_bmi, save_user, get_all_users
 from exception import PDFNotCreatedException
 from model import Heart, BMI
 from .utils import create_temp_file
 
 
-def save_heart_service(systolic_bp: int, diastolic_bp: int, puls_frequency: int, date=None):
+def save_heart_service(user_id, systolic_bp: int, diastolic_bp: int, puls_frequency: int, date=None):
     """
     Save the heart-object in the Database.
 
@@ -29,9 +29,9 @@ def save_heart_service(systolic_bp: int, diastolic_bp: int, puls_frequency: int,
     :param date: the date of the measuring.
     """
     if date is None:
-        save_heart(Heart(systolic_BP=systolic_bp, diastolic_BP=diastolic_bp, puls_Frequency=puls_frequency))
+        save_heart(Heart(systolic_BP=systolic_bp, diastolic_BP=diastolic_bp, puls_Frequency=puls_frequency, user_id=user_id))
     else:
-        save_heart(Heart(systolic_BP=systolic_bp, diastolic_BP=diastolic_bp, puls_Frequency=puls_frequency, date=date))
+        save_heart(Heart(systolic_BP=systolic_bp, diastolic_BP=diastolic_bp, puls_Frequency=puls_frequency, date=date, user_id=user_id))
 
 def save_user_service(user):
    return save_user(user)
@@ -58,9 +58,11 @@ def get_all_heart_service() -> list[Heart]:
     return get_all_heart()
 
 
-def get_newest_bmi_service() -> BMI:
+def get_newest_bmi_service() -> list[BMI]:
     return get_newest_bmi()
 
+def get_user_service() -> list[Heart]:
+    return get_all_users()
 
 def get_all_bmi_service() -> list[BMI]:
     """
