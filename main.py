@@ -36,14 +36,14 @@ if __name__ in {"__main__", "__mp_main__"}:
     init_database()
     build_gui()
 
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 5:
         ui.run(native=True, favicon='🫀', frameless=True, fullscreen=True, language="de", port=native.find_open_port())
     else:
-        is_native = (sys.argv[1].lower() == "native")
+        is_native = (sys.argv[3].lower() == "native")
 
         if sys.argv[3] == "automatic":
             port_str = native.find_open_port()
         else:
-            port_str = sys.argv[2]
+            port_str = sys.argv[4]
 
         ui.run(native=is_native, favicon='🫀', frameless=is_native, fullscreen=is_native, language="de", port=int(port_str))
