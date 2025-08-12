@@ -20,8 +20,8 @@ def start_nicegui_in_new_process(is_native: bool, port: int, automatic_port: boo
     """ 
     try:
         mode_arg = "native" if is_native else "browser"
-        port_arg = str(port) if automatic_port else str(port)
-        process = subprocess.Popen([sys.executable, "main.py", str(port)," " ,mode_arg ,str(port_arg)],
+        port_arg = "automatic" if automatic_port else str(port)
+        process = subprocess.Popen([sys.executable, "main.py", str(port) ,str(port_arg), mode_arg],
                          stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
 
         root.nicegui_process = process
@@ -59,7 +59,7 @@ def start_app(port_entry, mode_var, disable_button, root):
     try:
         if not port_locked:
             port = int(port)
-            start_nicegui_in_new_process(not is_browser, port, not port_locked,root)
+            start_nicegui_in_new_process(not is_browser, port,  port_locked,root)
         else:
             start_nicegui_in_new_process(not is_browser, 5000, not port_locked,root)
     except Exception as e:

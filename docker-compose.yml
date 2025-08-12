@@ -7,6 +7,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ["python3", "./main.py", "", "browser", "", "8080"]
+    command: ["python3", "./main.py","8080", "8080", "browser"]
     ports:
       - "5000:8080"
