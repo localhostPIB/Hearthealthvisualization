@@ -3,7 +3,8 @@ from typing import Final
 
 from dotenv import load_dotenv
 
-from exception import HeathValueNotSaveException, BMIValueNotSaveException, UserNotSaveException
+from exception import HeathValueNotSaveException, BMIValueNotSaveException, UserNotSaveException, \
+    HeartValueNotDeleteException
 from model import Heart, BMI, User
 from database import Database
 
@@ -12,6 +13,17 @@ load_dotenv()
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 db = Database(SQLALCHEMY_DATABASE_URL)
 
+
+def delete_heart_value_by_id(heart_id: int):
+    try:
+        with db.session() as session:
+            session.query(Heart).filter_by(id=heart_id).delete()
+            session.commit()
+    except HeartValueNotDeleteException as e:
+        print(e)
+        raise e
+    finally:
+        session.close()
 
 def get_all_users() -> list[User]:
     try:

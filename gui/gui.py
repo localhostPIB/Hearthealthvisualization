@@ -302,7 +302,7 @@ def build_grid_view():
                     {'name': 'Systolisch', 'label': 'Systolisch', 'field': 'Systolisch'},
                     {'name': 'Diastolisch', 'label': 'Diastolisch', 'field': 'Diastolisch'},
                     {'name': 'Pulsdruck', 'label': 'Pulsdruck', 'field': 'Pulsdruck'},
-                    {'na    me': 'Puls', 'label': 'Puls', 'field': 'Puls'},
+                    {'name': 'Puls', 'label': 'Puls', 'field': 'Puls'},
                 ]
                 if all_heart_values:
                     table = ui.table(columns=columns, rows=all_values_as_json_service(all_heart_values), pagination=10,
@@ -310,7 +310,7 @@ def build_grid_view():
                     add_label(table)
                 else:
                     table = ui.table(columns=columns, rows=[], pagination=10,
-                                     on_pagination_change=lambda e: ui.notify(e.value))
+                                     on_pagination_change=lambda e: ui.notify(e.value)) #todo https://nicegui.io/documentation/aggrid
         ui.button('App schließen', on_click=lambda: app.shutdown()).classes('bg-red-500 text-white px-6 py-2')
 
 

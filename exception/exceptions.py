@@ -12,6 +12,12 @@ class UserNotSaveException(Exception):
         self.message = message
         super().__init__(self.message)
 
+class HeartValueNotDeleteException(Exception):
+    """This custom exception is thrown if the heart value not deletes."""
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
 
 class BMIValueNotSaveException(Exception):
     """This custom exception is thrown if the BMI value not saves."""

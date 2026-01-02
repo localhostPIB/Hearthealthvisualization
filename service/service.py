@@ -13,7 +13,8 @@ import plotly.express as px
 import pandas as pd
 from reportlab.platypus import Table, TableStyle, SimpleDocTemplate
 
-from dao import save_heart, get_all_bmi, get_all_heart, save_bmi, delete_bmi, get_newest_bmi, save_user, get_all_users
+from dao import save_heart, get_all_bmi, get_all_heart, save_bmi, delete_bmi, get_newest_bmi, save_user, get_all_users, \
+    delete_heart_value_by_id
 from exception import PDFNotCreatedException
 from model import Heart, BMI
 from .utils import create_temp_file
@@ -33,8 +34,15 @@ def save_heart_service(user_id, systolic_bp: int, diastolic_bp: int, puls_freque
     else:
         save_heart(Heart(systolic_BP=systolic_bp, diastolic_BP=diastolic_bp, puls_Frequency=puls_frequency, date=date, user_id=user_id))
 
-def save_user_service(user):
-   return save_user(user)
+def save_user_service(user) -> int:
+    """
+    Saves a User with his attributes. If successful, the user-Id is returned.
+
+    :param user: User-Object.
+    :returns: the User-id, this id is important for handling further data such as BMI, etc.
+    :rtype: int
+    """
+    return save_user(user)
 
 
 def save_bmi_service(weight: float, size: float, user_id ,created_at=None):
@@ -56,6 +64,14 @@ def get_all_heart_service() -> list[Heart]:
     :rtype: list
     """
     return get_all_heart()
+
+def delete_heart_value_by_id_service(heart_id: int):
+    """
+    Delete a heart_value by id.
+
+    :param heart_id: the id of the heart_value.
+    """
+    delete_heart_value_by_id(heart_id)
 
 
 def get_newest_bmi_service() -> list[BMI]:
