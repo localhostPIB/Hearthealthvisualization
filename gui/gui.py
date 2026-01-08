@@ -45,7 +45,7 @@ def save_user_values(name_input, gender_select, age_input):
     user = User(name=name, age=age, gender=gender[0])
 
     user_id = save_user_service(user)
-    ui.notify(f'Name: {name}, Geschlecht: {gender}, Alter: {age}', color='green')
+    ui.notify(f'Name: {name}, Geschlecht: {gender[0].value}, Alter: {age}', color='green')
 
     return user_id
 
@@ -128,14 +128,14 @@ def build_stepper():
     size_input = None
     weight_input = None
 
-    stepper_container = ui.column()
+    stepper_container = ui.column().classes('w-full h-screen flex items-center justify-center')
     result_container = ui.grid(columns=1).classes('justify-center items-center w-full').classes('hidden')
 
     with stepper_container:
         with ui.stepper().props('vertical').classes('w-full') as stepper:
             with ui.step('Allgemeine Daten: Name, Geschlecht, Alter').classes('w-full'):
                 name_input = ui.input('Name', validation=lambda value: 'Bitte geben Sie ihren Namen ein' if len(value) < 2 else None)
-                gender_select = gender_select = ui.select(options=[(e.name, e) for e in GenderEnum],label='Gender')
+                gender_select = gender_select = ui.select(options=[(e, ) for e in GenderEnum],label='Gender')
                 age_input = ui.input('Alter', validation=validate_positive_float)
 
                 def go_to_next_if_valid():
@@ -311,7 +311,6 @@ def build_grid_view():
                 else:
                     table = ui.table(columns=columns, rows=[], pagination=10,
                                      on_pagination_change=lambda e: ui.notify(e.value)) #todo https://nicegui.io/documentation/aggrid
-        ui.button('App schließen', on_click=lambda: app.shutdown()).classes('bg-red-500 text-white px-6 py-2')
 
 
 def build_gui():
@@ -329,3 +328,4 @@ def build_gui():
         build_stepper()
     else:
         build_grid_view()
+    ui.button('App schließen', on_click=lambda: app.shutdown()).classes('bg-red-500 text-white px-6 py-2')
