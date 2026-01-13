@@ -7,8 +7,9 @@ from plotly.graph_objs import Figure
 from exception import HeathValueNotSaveException
 from gui import gui_utils
 from gui.gui_utils import add_label
+from gui.stepper import build_stepper
 from gui.utils import validate_positive_integer, validate_positive_float
-from model import GenderEnum, User
+from model import  User
 from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_health_data_to_document, \
     all_values_as_json_service, make_gauge_chart_service, save_bmi_service, get_all_bmi_service, get_newest_bmi_service, \
     save_user_service
@@ -119,70 +120,6 @@ def update_view():
             no_data_label_bmi.delete()
             no_data_icon_bmi = None
             no_data_label_bmi = None
-
-
-def build_stepper():
-    """
-    If the database is empty, a short interactive question is asked.
-    """
-    size_input = None
-    weight_input = None
-
-    stepper_container = ui.column().classes('w-full h-screen flex items-center justify-center')
-    result_container = ui.grid(columns=1).classes('justify-center items-center w-full').classes('hidden')
-
-    with stepper_container:
-        with ui.stepper().props('vertical').classes('w-full') as stepper:
-            with ui.step('Allgemeine Daten: Name, Geschlecht, Alter').classes('w-full'):
-                name_input = ui.input('Name', validation=lambda value: 'Bitte geben Sie ihren Namen ein' if len(value) < 2 else None)
-                gender_select = gender_select = ui.select(options=[(e, ) for e in GenderEnum],label='Gender')
-                age_input = ui.input('Alter', validation=validate_positive_float)
-
-                def go_to_next_if_valid():
-                    if age_input.validate() and gender_select.validate() and name_input.validate():
-                        stepper.next()
-
-                with ui.stepper_navigation():
-                    ui.button('Weiter', on_click=go_to_next_if_valid)
-
-            with ui.step('BMI: Körpergröße'):
-                ui.label('Bitte geben Sie Ihre Körpergröße in m ein:')
-                size_input = ui.input(
-                    'Körpergröße (in m)',
-                    placeholder='0.5 - 2.5 m',
-                    validation=validate_positive_float
-                )
-
-                def go_to_next_if_valid():
-                    if size_input.validate():
-                        stepper.next()
-
-                with ui.stepper_navigation():
-                    ui.button('Weiter', on_click=go_to_next_if_valid)
-
-            with ui.step('BMI: Gewicht'):
-                ui.label('Bitte geben Sie Ihr Gewicht in kg ein:')
-                weight_input = ui.input(
-                    'Körpergewicht (in kg)',
-                    placeholder='1 - 999 kg',
-                    validation=validate_positive_float
-                )
-
-                def finish_if_valid():
-                    global user_id
-
-                    if weight_input.validate():
-                        user_id = save_user_values(name_input, gender_select, age_input)
-                        save_bmi_values(weight_input, size_input, user_id)
-                        stepper_container.classes('hidden')
-                        result_container.classes(remove='hidden')
-                        with result_container:
-                            build_grid_view()
-
-                with ui.stepper_navigation():
-                    ui.button('Zurück', on_click=stepper.previous).props('flat')
-                    ui.button('Fertigstellen', on_click=finish_if_valid)
-
 
 def build_grid_view():
     global table, plot, raw_plot, no_data_label_bmi, no_data_label, no_data_icon, no_data_label, no_data_icon_bmi, \
@@ -325,7 +262,13 @@ def build_gui():
     gui_utils.set_dark_mode()
 
     if not get_all_bmi_service() and not get_all_heart_service():
-        build_stepper()
+        build_stepper(validate_positive_float, save_user_values, save_bmi_values, build_grid_view)
     else:
-        build_grid_view()
-    ui.button('App schließen', on_click=lambda: app.shutdown()).classes('bg-red-500 text-white px-6 py-2')
+        with ui.page_sticky(position='bottom-left').style('z-index: 1000;'):
+            ui.button(icon='highlight_off', on_click=lambda: app.shutdown()).props('fab color=red')
+
+        with ui.column().classes('w-screen justify-center items-center'):
+            with ui.row().classes('items-center gap-3'):
+                ui.icon('waving_hand').classes('text-5xl')
+                ui.label(f'Hallo {get_user_service()[0].name}').classes('text-xl font-medium')
+            build_grid_view()

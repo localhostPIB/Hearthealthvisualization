@@ -15,7 +15,7 @@ def set_dark_mode():
 
     with ui.row().classes('items-center gap-4'):
         ui.icon('light_mode').classes('text-yellow-500 text-2xl')
-        ui.switch(on_change=toggle_dark_mode).bind_value_to(dark, 'enabled')
+        ui.switch().bind_value_to(dark, 'value')
         ui.icon('dark_mode').classes('text-indigo-400 text-2xl')
 
 def add_label(table):
