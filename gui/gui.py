@@ -138,7 +138,7 @@ def build_grid_view():
 
         with ui.tab_panels(tabs, value=one).classes('w-full'):
             with ui.tab_panel(one):
-                with ui.expansion('Herzgesundheit', icon='monitor_heart').classes('w-full'):
+                with ui.expansion('Herzgesundheit', icon='monitor_heart').classes('w-[95%] mx-auto'):
                     ui.label('Herzwerte Übersicht').classes('text-2xl font-bold mb-4')
 
                     with ui.row().classes('flex w-full items-start gap-4'):
@@ -182,12 +182,11 @@ def build_grid_view():
                                                                          date_input, time_input)).classes(
                                 'px-6 py-2 mt-2')
 
-                with ui.expansion("Übersicht Body Mass Index", icon='run_circle').classes('w-full'):
-                    ui.label('Übersicht Body Mass Index (BMI) Übersicht').classes('text-2xl font-bold mb-4')
-                    with ui.row().classes('flex w-full flex-wrap justify-between gap-1'):
-                        plot_container = ui.card().classes(
-                            'w-[50%] min-h-[400px] p-6 flex flex-col items-center justify-center')
-                        input_container = ui.card().classes('w-[40%] min-h-[400px] p-6 flex flex-col justify-between')
+                with ui.expansion("Übersicht Body Mass Index", icon='run_circle').classes('w-[95%] mx-auto'):
+                    ui.label('Übersicht Body Mass Index (BMI):').classes('text-2xl font-bold mb-4')
+                    with ui.row().classes('w-full gap-4 items-start'):
+                        plot_container = ui.card()
+                        input_container = ui.card()
 
                         with plot_container:
                             bmi = get_newest_bmi_service()
@@ -264,8 +263,10 @@ def build_gui():
     if not get_all_bmi_service() and not get_all_heart_service():
         build_stepper(validate_positive_float, save_user_values, save_bmi_values, build_grid_view)
     else:
-        with ui.page_sticky(position='bottom-left').style('z-index: 1000;'):
-            ui.button(icon='highlight_off', on_click=lambda: app.shutdown()).props('fab color=red')
+        with (ui.fab('settings', color='teal', direction='right')
+                      .style(f'position: sticky; right: 24px; bottom: 200px; z-index: 1000;')):
+            ui.fab_action('save', label='Speichere Plot als PDF', color='green')
+            ui.fab_action('highlight_off', label='Beenden', on_click=lambda: app.shutdown(), color='red')
 
         with ui.column().classes('w-screen justify-center items-center'):
             with ui.row().classes('items-center gap-3'):
