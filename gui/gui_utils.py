@@ -7,13 +7,7 @@ def set_dark_mode():
     """
     dark = ui.dark_mode()
 
-    def toggle_dark_mode(e):
-        if e.value:
-            dark.enable()
-        else:
-            dark.disable()
-
-    with ui.row().classes('items-center gap-4'):
+    with ui.row().classes('items-center gap-4 ml-6'):
         ui.icon('light_mode').classes('text-yellow-500 text-2xl')
         ui.switch().bind_value_to(dark, 'value')
         ui.icon('dark_mode').classes('text-indigo-400 text-2xl')

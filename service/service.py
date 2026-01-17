@@ -1,6 +1,7 @@
 from datetime import datetime
 import os
 import tempfile
+from pathlib import Path
 from typing import List, Any, LiteralString
 
 from plotly.graph_objs import Figure, Indicator
@@ -163,7 +164,7 @@ def make_line_plot_service(heart_list: List[Heart]) -> Figure:
 
     df = df.sort_values(by='date')
 
-    fig = px.line(df, x=df["date"], y=df.columns, width=1024, height=768)
+    fig = px.line(df, x=df["date"], y=df.columns, width=800, height=600)
 
     fig.data[0].name = "Puls"
     fig.data[1].name = "Systolisch"
@@ -240,7 +241,8 @@ def save_health_data_to_document(heart_plot: Figure, bmi_plot: Figure ,measured_
     pdf_name = pdf_name or "plot"
 
     timestamp = str(int(now.timestamp() * 1000))
-    temp_dir = tempfile.gettempdir()
+    temp_dir = Path(__file__).resolve().parent
+    temp_dir  = temp_dir.parent
     pdf_base = f"{pdf_name}_{timestamp}"
 
     plot_pdf_path = os.path.join(temp_dir, f"{pdf_base}_plot.pdf")

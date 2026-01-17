@@ -125,15 +125,27 @@ def build_grid_view():
     global table, plot, raw_plot, no_data_label_bmi, no_data_label, no_data_icon, no_data_label, no_data_icon_bmi, \
         bmi_plot, bmi_label
 
+    with ui.fab('settings', color='blue', direction='right').style(f'position: sticky;  z-index: 1000;'):
+        ui.fab_action('save', label='Speichere Plot als PDF', color='green', on_click=lambda: ui.download(save_health_data_to_document(
+                              make_line_plot_service(all_heart_values),
+                              make_gauge_chart_service(get_newest_bmi_service().calc_bmi()),
+                              all_values_as_json_service(all_heart_values),"Health")))
+        ui.fab_action('highlight_off', label='Beenden', on_click=lambda: app.shutdown(), color='red')
+
     result_container = ui.grid(columns=1).classes('justify-center items-center w-full')
 
     current_date = datetime
     all_heart_values = get_all_heart_service()
 
     with result_container:
+        with ui.column().classes('w-screen justify-center items-center'):
+            with ui.row().classes('items-center gap-3'):
+                ui.icon('waving_hand').classes('text-5xl')
+                ui.label(f'Hallo {get_user_service()[0].name}').classes('text-xl font-medium')
+
+
         with ui.tabs().classes('w-full') as tabs:
             one = ui.tab('Plot', icon='stacked_line_chart')
-            two = ui.tab('Speichern', icon='save_as')
             three = ui.tab('Alle Werte', icon='table_view')
 
         with ui.tab_panels(tabs, value=one).classes('w-full'):
@@ -221,17 +233,6 @@ def build_grid_view():
                                 'Werte speichern',
                                 on_click=lambda: save_bmi_values(weight_input, size_input, get_user_service()[0].id)
                             ).classes('px-6 py-2 self-start')
-
-            with ui.tab_panel(two):
-                all_heart_values = get_all_heart_service()
-
-                ui.button('Speichere Plot als PDF',
-                          on_click=lambda: ui.download(save_health_data_to_document(
-                              make_line_plot_service(all_heart_values),
-                              make_gauge_chart_service(get_newest_bmi_service().calc_bmi()),
-                              all_values_as_json_service(all_heart_values)), "Health")
-                          ).classes('px-6 py-2')
-
             with ui.tab_panel(three):
                 columns = [
                     {'name': 'Datum', 'label': 'Datum', 'field': 'Datum'},
@@ -263,13 +264,4 @@ def build_gui():
     if not get_all_bmi_service() and not get_all_heart_service():
         build_stepper(validate_positive_float, save_user_values, save_bmi_values, build_grid_view)
     else:
-        with (ui.fab('settings', color='teal', direction='right')
-                      .style(f'position: sticky; right: 24px; bottom: 200px; z-index: 1000;')):
-            ui.fab_action('save', label='Speichere Plot als PDF', color='green')
-            ui.fab_action('highlight_off', label='Beenden', on_click=lambda: app.shutdown(), color='red')
-
-        with ui.column().classes('w-screen justify-center items-center'):
-            with ui.row().classes('items-center gap-3'):
-                ui.icon('waving_hand').classes('text-5xl')
-                ui.label(f'Hallo {get_user_service()[0].name}').classes('text-xl font-medium')
             build_grid_view()
