@@ -100,6 +100,7 @@ def all_values_as_json_service(all_values: list) -> list[dict[str, Any]]:
     """
     return [
         {
+            "Id": heart.id,
             "Systolisch": heart.systolic_BP,
             "Diastolisch": heart.diastolic_BP,
             "Pulsdruck": heart.calc_pulse_pressure(),

@@ -15,6 +15,7 @@ db = Database(SQLALCHEMY_DATABASE_URL)
 
 
 def delete_heart_value_by_id(heart_id: int):
+    # Deletes heart value by id; handles exceptions; closes session
     try:
         with db.session() as session:
             session.query(Heart).filter_by(id=heart_id).delete()
@@ -62,9 +63,9 @@ def save_bmi(bmi: BMI):
             session.commit()
     except BMIValueNotSaveException as e:
         print(e)
+        session.rollback()
         raise e
     finally:
-        session.rollback()
         session.close()
 
 
@@ -80,9 +81,9 @@ def delete_bmi(bmi_id: int):
             session.commit()
     except BMIValueNotSaveException as e:
         print(e)
+        session.rollback()
         raise e
     finally:
-        session.rollback()
         session.close()
 
 
@@ -98,9 +99,9 @@ def save_heart(heart: Heart):
             session.commit()
     except HeathValueNotSaveException as e:
         print(e)
+        session.rollback()
         raise e
     finally:
-        session.rollback()
         session.close()
 
 
@@ -175,4 +176,7 @@ def save_user(user: User) -> int:
             return user.id
     except BMIValueNotSaveException as e:
         print(e)
+        session.rollback()
         raise e
+    finally:
+        session.close()

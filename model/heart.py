@@ -25,7 +25,8 @@ class Heart(Base):
         return self.systolic_BP - self.diastolic_BP
 
     def __repr__(self):
-        return "%s %s %s %s %s" % (
+        return "%s %s %s %s %s %s" % (
+            self.id,
             self.systolic_BP,
             self.diastolic_BP,
             self.calc_pulse_pressure(),

@@ -12,6 +12,52 @@ def set_dark_mode():
         ui.switch().bind_value_to(dark, 'value')
         ui.icon('dark_mode').classes('text-indigo-400 text-2xl')
 
+
+def systolic_color(value: int) -> str:
+    if value >= 180:
+        return 'purple'
+    if value >= 140:
+        return 'red'
+    if value >= 130:
+        return 'orange'
+    if value >= 120:
+        return 'yellow'
+    return 'green'
+
+
+def pulse_color(pulse: int) -> str:
+    if pulse > 120:
+        return 'red'
+    if pulse > 100:
+        return 'orange'
+    if pulse < 60:
+        return 'blue'
+    return 'green'
+
+
+def diastolic_color(value: int) -> str:
+    if value >= 110:
+        return 'purple'
+    if value >= 100:
+        return 'red'
+    if value >= 90:
+        return 'orange'
+    if value >= 85:
+        return 'yellow'
+    return 'green'
+
+
+def puls_frequency_color(value: int) -> str:
+    if value >= 90:
+        return 'red'
+    if value >= 76:
+        return 'yellow'
+    if value >= 66:
+        return 'orange'
+    if value >= 40:
+        return 'green'
+    return 'grey'
+
 def add_label(table):
     """
     Adds label to show the user which values are okay and which are too high

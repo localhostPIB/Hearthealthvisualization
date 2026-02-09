@@ -6,16 +6,15 @@ from plotly.graph_objs import Figure
 
 from exception import HeathValueNotSaveException
 from gui import gui_utils
-from gui.gui_utils import add_label
+from gui.gui_utils import systolic_color, diastolic_color, puls_frequency_color
 from gui.stepper import build_stepper
 from gui.utils import validate_positive_integer, validate_positive_float
-from model import  User
+from model import User
 from service import make_line_plot_service, get_all_heart_service, save_heart_service, save_health_data_to_document, \
     all_values_as_json_service, make_gauge_chart_service, save_bmi_service, get_all_bmi_service, get_newest_bmi_service, \
     save_user_service
-from service.service import get_user_service
+from service.service import get_user_service, delete_heart_value_by_id_service
 
-table = None
 plot = None
 bmi_plot = None
 raw_plot = None
@@ -25,7 +24,7 @@ no_data_label = None
 no_data_icon_bmi = None
 no_data_icon = None
 user_id = None
-
+active_tab = {'value': 'Alle Werte'}
 
 def save_bmi_values(weight_input, size_input, user_id):
     weight = float(weight_input.value)
@@ -37,6 +36,7 @@ def save_bmi_values(weight_input, size_input, user_id):
 
     save_bmi_service(weight, size, user_id)
     update_view()
+
 
 def save_user_values(name_input, gender_select, age_input):
     name = name_input.value
@@ -62,6 +62,7 @@ def save_heart_values(user_id, diastolic_input, systolic_input, pulse_input, dat
     :param time: Time of the measurement.
     """
 
+    # Validates input; persists data; provides user feedback
     try:
         diastolic = int(diastolic_input.value)
         systolic = int(systolic_input.value)
@@ -87,15 +88,13 @@ def update_view():
     """
     Gui elements are updated here as soon as something is added, such as the table, plot and the symbols/hints.
     """
-    global table, plot, raw_plot, no_data_label, no_data_icon, bmi_plot, bmi_label, no_data_icon_bmi, no_data_label_bmi
+    global plot, raw_plot, no_data_label, no_data_icon, bmi_plot, bmi_label, no_data_icon_bmi, no_data_label_bmi
+
     all_heart_values: Final[list] = get_all_heart_service()
     all_bmi_values: Final[list] = get_all_bmi_service()
 
-    if table and all_heart_values:
-        table.rows = all_values_as_json_service(all_heart_values)
-        table.update()
-        add_label(table)
 
+    # Updates heart plot if data exists; removes placeholder
     if plot and all_heart_values:
         new_fig: Final[Figure] = make_line_plot_service(get_all_heart_service())
         plot.figure = new_fig
@@ -108,12 +107,12 @@ def update_view():
             no_data_label = None
             no_data_icon = None
 
+    # Updates BMI plot if data exists; removes placeholder elements
     if bmi_plot and all_bmi_values:
         new_bmi_plot: Final[Figure] = make_gauge_chart_service(get_newest_bmi_service().calc_bmi())
         bmi_plot.figure = new_bmi_plot
         bmi_plot.figure.layout = new_bmi_plot.layout
         ui.update(bmi_plot)
-
 
         if no_data_label_bmi:
             no_data_icon_bmi.delete()
@@ -121,15 +120,16 @@ def update_view():
             no_data_icon_bmi = None
             no_data_label_bmi = None
 
+
 def build_grid_view():
-    global table, plot, raw_plot, no_data_label_bmi, no_data_label, no_data_icon, no_data_label, no_data_icon_bmi, \
-        bmi_plot, bmi_label
+    global plot, raw_plot, no_data_label_bmi, no_data_label, no_data_icon, no_data_label, no_data_icon_bmi, bmi_plot, bmi_label
 
     with ui.fab('settings', color='blue', direction='right').style(f'position: sticky;  z-index: 1000;'):
-        ui.fab_action('save', label='Speichere Plot als PDF', color='green', on_click=lambda: ui.download(save_health_data_to_document(
-                              make_line_plot_service(all_heart_values),
-                              make_gauge_chart_service(get_newest_bmi_service().calc_bmi()),
-                              all_values_as_json_service(all_heart_values),"Health")))
+        ui.fab_action('save', label='Speichere Plot als PDF', color='green',
+                      on_click=lambda: ui.download(save_health_data_to_document(
+                          make_line_plot_service(all_heart_values),
+                          make_gauge_chart_service(get_newest_bmi_service().calc_bmi()),
+                          all_values_as_json_service(all_heart_values), "Health")))
         ui.fab_action('highlight_off', label='Beenden', on_click=lambda: app.shutdown(), color='red')
 
     result_container = ui.grid(columns=1).classes('justify-center items-center w-full')
@@ -137,19 +137,18 @@ def build_grid_view():
     current_date = datetime
     all_heart_values = get_all_heart_service()
 
-    with result_container:
+    with (result_container):
         with ui.column().classes('w-screen justify-center items-center'):
             with ui.row().classes('items-center gap-3'):
                 ui.icon('waving_hand').classes('text-5xl')
                 ui.label(f'Hallo {get_user_service()[0].name}').classes('text-xl font-medium')
 
+        with ui.tabs().bind_value(active_tab, 'value').classes('w-full') as tabs:
+            tab_one = ui.tab('Plot', icon='stacked_line_chart')
+            tab_two = ui.tab('Alle Werte', icon='table_view')
 
-        with ui.tabs().classes('w-full') as tabs:
-            one = ui.tab('Plot', icon='stacked_line_chart')
-            three = ui.tab('Alle Werte', icon='table_view')
-
-        with ui.tab_panels(tabs, value=one).classes('w-full'):
-            with ui.tab_panel(one):
+        with ui.tab_panels(tabs, value=tab_one).classes('w-full'):
+            with ui.tab_panel(tab_one):
                 with ui.expansion('Herzgesundheit', icon='monitor_heart').classes('w-[95%] mx-auto'):
                     ui.label('Herzwerte Übersicht').classes('text-2xl font-bold mb-4')
 
@@ -190,7 +189,8 @@ def build_grid_view():
                             time_input = ui.input("Uhrzeit", placeholder="hh:mm", value=current_date.now().
                                                   strftime('%H:%M')).props('type=time').classes('w-full')
                             ui.button('Werte speichern',
-                                      on_click=lambda: save_heart_values(get_user_service()[0].id, diastolic_input, systolic_input, pulse_input,
+                                      on_click=lambda: save_heart_values(get_user_service()[0].id, diastolic_input,
+                                                                         systolic_input, pulse_input,
                                                                          date_input, time_input)).classes(
                                 'px-6 py-2 mt-2')
 
@@ -208,7 +208,6 @@ def build_grid_view():
                                 bmi_raw_plot = make_gauge_chart_service(0)
                             else:
                                 bmi_raw_plot = make_gauge_chart_service(get_newest_bmi_service().calc_bmi())
-                                # ui.image('resources/static/img/body_img.png').classes('max-h-100')
                                 ui.label(f"Bei einer Körpergröße von: {bmi.size} m wiegen Sie {bmi.weight} kg").classes(
                                     'text-center')
 
@@ -233,28 +232,46 @@ def build_grid_view():
                                 'Werte speichern',
                                 on_click=lambda: save_bmi_values(weight_input, size_input, get_user_service()[0].id)
                             ).classes('px-6 py-2 self-start')
-            with ui.tab_panel(three):
-                columns = [
-                    {'name': 'Datum', 'label': 'Datum', 'field': 'Datum'},
-                    {'name': 'Systolisch', 'label': 'Systolisch', 'field': 'Systolisch'},
-                    {'name': 'Diastolisch', 'label': 'Diastolisch', 'field': 'Diastolisch'},
-                    {'name': 'Pulsdruck', 'label': 'Pulsdruck', 'field': 'Pulsdruck'},
-                    {'name': 'Puls', 'label': 'Puls', 'field': 'Puls'},
-                ]
+            with ui.tab_panel(tab_two):
                 if all_heart_values:
-                    table = ui.table(columns=columns, rows=all_values_as_json_service(all_heart_values), pagination=10,
-                                     on_pagination_change=lambda e: ui.notify(e.value))
-                    add_label(table)
+                    build_ui_table()
                 else:
-                    table = ui.table(columns=columns, rows=[], pagination=10,
-                                     on_pagination_change=lambda e: ui.notify(e.value)) #todo https://nicegui.io/documentation/aggrid
+                    ui.label('Keine Einträge vorhanden').classes('mx-auto')
 
 
+def delete_heart_value(entry_id: int):
+    delete_heart_value_by_id_service(entry_id) #todo table refreshable
+    build_ui_table.refresh()
+
+@ui.refreshable
+def build_ui_table():
+    all_heart_values = get_all_heart_service()
+
+    with ui.column().classes('w-full'):
+        with ui.row().classes('font-bold border-b'):
+            ui.label('Datum').classes('w-32')
+            ui.label('Systolisch').classes('w-32')
+            ui.label('Diastolisch').classes('w-32')
+            ui.label('Puls').classes('w-32')
+            ui.label('').classes('w-16')
+
+        for value in all_heart_values:
+            with ui.row().classes('items-center border-b py-1'):
+                ui.label(value.date.strftime("%d.%m.%Y")).classes('w-32')
+
+                ui.badge(value.systolic_BP, color=systolic_color(value.systolic_BP)).classes('w-32')
+
+                ui.badge(value.diastolic_BP, color=diastolic_color(value.diastolic_BP)).classes('w-32')
+
+                ui.badge(value.puls_Frequency, color=puls_frequency_color(value.puls_Frequency)).classes('w-32')
+
+                ui.button(icon='delete', on_click=lambda v=value: delete_heart_value(v.id),
+                          ).props('flat fab-mini color=grey')
 def build_gui():
     """
     The gui is assembled here.
     """
-    global table, plot, raw_plot, no_data_label_bmi, no_data_label, no_data_icon, no_data_label, no_data_icon_bmi, \
+    global plot, raw_plot, no_data_label_bmi, no_data_label, no_data_icon, no_data_label, no_data_icon_bmi, \
         bmi_plot, bmi_label
 
     ui.page_title('Gesundheitsmonitoring')
@@ -264,4 +281,4 @@ def build_gui():
     if not get_all_bmi_service() and not get_all_heart_service():
         build_stepper(validate_positive_float, save_user_values, save_bmi_values, build_grid_view)
     else:
-            build_grid_view()
+        build_grid_view()

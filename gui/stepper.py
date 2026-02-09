@@ -9,21 +9,21 @@ def build_stepper(validate_positive_float, save_user_values, save_bmi_values, bu
     size_input = None
     weight_input = None
 
-    stepper_container = ui.column().classes('w-full h-screen flex items-center justify-center')
+    stepper_container = ui.column().classes('w-full h-screen/3 flex items-center justify-center')
     result_container = ui.grid(columns=1).classes('justify-center items-center w-full').classes('hidden')
 
     with stepper_container:
         with ui.button_group().props('push glossy'):
             ui.button('Schließen',icon='highlight_off' ,color='red', on_click=lambda: app.shutdown()).props('push')
         with ui.stepper().props('vertical').classes('w-full') as stepper:
+
             with ui.step('Allgemeine Daten: Name, Geschlecht, Alter').classes('w-full'):
-                with ui.column().classes('w-full items-center'):
-                    ui.image('resources/static/img/body_img.png').classes(
-                        'absolute top-1/2 left-1/2 ''-translate-x-1/2 -translate-y-1/2 ''w-80')
+
                 name_input = ui.input('Name', validation=lambda value: 'Bitte geben Sie ihren Namen ein' if len(value) < 2 else None)
                 gender_select = gender_select = ui.select(options=[(e, ) for e in GenderEnum],label='Geschlecht',with_input=True)
                 age_input = ui.input('Alter', validation=validate_positive_float)
 
+                # Advances stepper if all inputs are valid
                 def go_to_next_if_valid():
                     if age_input.validate() and gender_select.validate() and name_input.validate():
                         stepper.next()
@@ -48,6 +48,7 @@ def build_stepper(validate_positive_float, save_user_values, save_bmi_values, bu
 
                 with ui.stepper_navigation():
                     ui.button('Weiter', on_click=go_to_next_if_valid)
+                    ui.button('Zurück', on_click=stepper.previous).props('flat')
 
             with ui.step('BMI: Gewicht'):
                 ui.label('Bitte geben Sie Ihr Gewicht in kg ein:')
@@ -68,6 +69,7 @@ def build_stepper(validate_positive_float, save_user_values, save_bmi_values, bu
                         save_bmi_values(weight_input, size_input, user_id)
                         stepper_container.classes('hidden')
                         result_container.classes(remove='hidden')
+
                         with result_container:
                             build_grid_view()
 
