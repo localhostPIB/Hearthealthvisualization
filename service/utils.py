@@ -5,7 +5,7 @@ def create_temp_file(img_bytes) -> str:
     """
     Creates a temporary file for the diagrams (Plot).
 
-    :param img_bytes: the plot as bytes.
+    :param img_bytes: The plot as bytes.
     :returns: The path of the temporary file.
     :rtype: str
     """

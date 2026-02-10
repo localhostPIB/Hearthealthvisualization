@@ -15,7 +15,11 @@ db = Database(SQLALCHEMY_DATABASE_URL)
 
 
 def delete_heart_value_by_id(heart_id: int):
-    # Deletes heart value by id; handles exceptions; closes session
+    """
+    Deletes heart value by id,
+
+    :param heart_id: the id of the heart value.
+    """
     try:
         with db.session() as session:
             session.query(Heart).filter_by(id=heart_id).delete()
@@ -27,11 +31,15 @@ def delete_heart_value_by_id(heart_id: int):
         session.close()
 
 def get_all_users() -> list[User]:
+    """
+    Outputs a list of all users.
+
+    :returns: User-List
+    :rtype: list[User]
+    """
     try:
         with db.session() as session:
-            users: Final[list[User]] = session.query(User).all()
-
-            return users
+            return session.query(User).all()
     except UserNotSaveException as e:
         print(e)
         raise e
@@ -39,11 +47,15 @@ def get_all_users() -> list[User]:
         session.close()
 
 def get_newest_bmi() -> list[BMI]:
+    """
+    Outputs the first entry from the BMI table.
+
+    :returns: BMI-List.
+    :rtype: list[BMI]
+    """
     try:
         with db.session() as session:
-            bmi: Final[BMI] = session.query(BMI).order_by(BMI.created_at.desc()).first()
-
-            return bmi
+            return session.query(BMI).order_by(BMI.created_at.desc()).first()
     except Exception as e:
         print(e)
         raise e
@@ -115,9 +127,7 @@ def find_heart_by_id(hid: int) -> Heart:
     """
     try:
         with db.session() as session:
-            heart: Heart = session.query(Heart).get(hid)
-
-            return heart
+            return session.query(Heart).get(hid)
     except Exception as e:
         print(e)
         raise e
@@ -130,13 +140,11 @@ def get_all_heart() -> list[Heart]:
     Outputs all heart-objects in a list.
 
     :returns: List with all heart-objects.
-    :rtype: list
+    :rtype: list[Heart]
     """
     try:
         with db.session() as session:
-            list: list[Heart] = session.query(Heart).all()
-
-            return list
+            return session.query(Heart).all()
     except Exception as e:
         print(e)
         raise e
@@ -149,13 +157,11 @@ def get_all_bmi() -> list[Heart]:
     Outputs all bmi-objects in a list.
 
     :returns: List with all bmi-objects.
-    :rtype: list
+    :rtype: list[Heart]
     """
     try:
         with db.session() as session:
-            list: list[BMI] = session.query(BMI).all()
-
-            return list
+            return session.query(BMI).all()
     except Exception as e:
         print(e)
         raise e
@@ -173,6 +179,7 @@ def save_user(user: User) -> int:
         with db.session() as session:
             session.add(user)
             session.commit()
+
             return user.id
     except BMIValueNotSaveException as e:
         print(e)

@@ -6,7 +6,7 @@ from plotly.graph_objs import Figure
 
 from exception import HeathValueNotSaveException
 from gui import gui_utils
-from gui.gui_utils import systolic_color, diastolic_color, puls_frequency_color
+from gui.gui_utils import systolic_color, diastolic_color, puls_pressure_color, pulse_color
 from gui.stepper import build_stepper
 from gui.utils import validate_positive_integer, validate_positive_float
 from model import User
@@ -100,6 +100,7 @@ def update_view():
         plot.figure = new_fig
         plot.figure.layout = new_fig.layout
         ui.update(plot)
+        build_ui_table.refresh()
 
         if no_data_label and no_data_icon:
             no_data_label.delete()
@@ -240,8 +241,8 @@ def build_grid_view():
 
 
 def delete_heart_value(entry_id: int):
-    delete_heart_value_by_id_service(entry_id) #todo table refreshable
-    build_ui_table.refresh()
+    delete_heart_value_by_id_service(entry_id)
+    update_view()
 
 @ui.refreshable
 def build_ui_table():
@@ -253,7 +254,8 @@ def build_ui_table():
             ui.label('Systolisch').classes('w-32')
             ui.label('Diastolisch').classes('w-32')
             ui.label('Puls').classes('w-32')
-            ui.label('').classes('w-16')
+            ui.label('Pulsdruck').classes('w-32')
+            ui.label('').classes('w-12')
 
         for value in all_heart_values:
             with ui.row().classes('items-center border-b py-1'):
@@ -263,10 +265,13 @@ def build_ui_table():
 
                 ui.badge(value.diastolic_BP, color=diastolic_color(value.diastolic_BP)).classes('w-32')
 
-                ui.badge(value.puls_Frequency, color=puls_frequency_color(value.puls_Frequency)).classes('w-32')
+                ui.badge(value.puls_Frequency, color=pulse_color(value.puls_Frequency)).classes('w-32')
+
+                ui.badge(value.calc_pulse_pressure(), color=puls_pressure_color(value.calc_pulse_pressure())).classes('w-32')
 
                 ui.button(icon='delete', on_click=lambda v=value: delete_heart_value(v.id),
                           ).props('flat fab-mini color=grey')
+
 def build_gui():
     """
     The gui is assembled here.

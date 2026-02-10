@@ -3,7 +3,7 @@ from nicegui import ui
 
 def set_dark_mode():
     """
-    You can use a dark mode with this function.
+    Adds a Nicegui dark mode.
     """
     dark = ui.dark_mode()
 
@@ -13,60 +13,9 @@ def set_dark_mode():
         ui.icon('dark_mode').classes('text-indigo-400 text-2xl')
 
 
-def systolic_color(value: int) -> str:
-    if value >= 180:
-        return 'purple'
-    if value >= 140:
-        return 'red'
-    if value >= 130:
-        return 'orange'
-    if value >= 120:
-        return 'yellow'
-    return 'green'
-
-
-def pulse_color(pulse: int) -> str:
-    if pulse > 120:
-        return 'red'
-    if pulse > 100:
-        return 'orange'
-    if pulse < 60:
-        return 'blue'
-    return 'green'
-
-
-def diastolic_color(value: int) -> str:
-    if value >= 110:
-        return 'purple'
-    if value >= 100:
-        return 'red'
-    if value >= 90:
-        return 'orange'
-    if value >= 85:
-        return 'yellow'
-    return 'green'
-
-
-def puls_frequency_color(value: int) -> str:
-    if value >= 90:
-        return 'red'
-    if value >= 76:
-        return 'yellow'
-    if value >= 66:
-        return 'orange'
-    if value >= 40:
-        return 'green'
-    return 'grey'
-
-def add_label(table):
+def systolic_color(systolic_value: int) -> str:
     """
-    Adds label to show the user which values are okay and which are too high
-
-    Pulse:
-    Blue: Bradycardia (<60)
-    Green: Normal (60-100)
-    Orange: Mild tachycardia (101-120)
-    Red: Severe tachycardia (>120)
+    Adds a color for the systolic heart value.
 
     Systolic:
     Green: Normal (<120)
@@ -75,58 +24,84 @@ def add_label(table):
     Red: Grade 2 hypertension (140-179)
     Purple: Grade 3 hypertension (≥180)
 
-    Diastolic:
-    Green: Normal (<85)
-    Yellow: High-normal (85-89)
-    Orange: Hypertension grade 1 (90-99)
-    Red: Hypertension grade 2 (100-109)
-    Violet (purple): Grade 3 hypertension (≥110)
+    :param systolic_value:  systolic heart value
+    :returns: The name of the color
+    :rtype: str
     """
-    table.add_slot('body-cell-Puls', '''
-        <q-td key="puls" :props="props">
-            <q-badge :color="
-                props.value > 120 ? 'red' :
-                props.value > 100 ? 'orange' :
-                props.value < 60 ? 'blue' :
-                'green'">
-                {{ props.value }}
-            </q-badge>
-        </q-td>
-    ''')
+    if systolic_value >= 180:
+        return 'purple'
+    if systolic_value >= 140:
+        return 'red'
+    if systolic_value >= 130:
+        return 'orange'
+    if systolic_value >= 120:
+        return 'yellow'
+    return 'green'
 
-    table.add_slot('body-cell-Systolisch', '''
-        <q-td key="systolisch" :props="props">
-            <q-badge :color="
-                props.value >= 180 ? 'purple' : 
-                props.value >= 140 ? 'red' : 
-                props.value >= 130 ? 'orange' : 
-                props.value >= 120 ? 'yellow' : 
-                'green'">
-                {{ props.value }}
-            </q-badge>
-        </q-td>
-    ''')
 
-    table.add_slot('body-cell-Diastolisch', '''
-        <q-td key="diastolisch" :props="props">
-            <q-badge :color="
-                props.value >= 110 ? 'purple' : 
-                props.value >= 100 ? 'red' : 
-                props.value >= 90 ? 'orange' : 
-                props.value >= 85 ? 'yellow' : 
-                'green'">
-                {{ props.value }}
-            </q-badge>
-        </q-td>
-    ''')
+def pulse_color(pulse_value: int) -> str:
+    """
+    Adds a color for the diastolic heart value.
 
-    table.add_slot('body-cell-Pulsdruck', '''
-        <q-td key="pulsdruck" :props="props">
-            <q-badge :color="props.value >= 90 ? 'red' : 
-                             props.value >= 76 ? 'yellow' : 
-                             props.value >= 66 ? 'orange' : 
-                             props.value >= 40 ? 'green' : 'grey'">
-                {{ props.value }}
-            </q-badge>
-        </q-td>
-    ''')
+    Pulse:
+    Blue: Bradycardia (<60)
+    Green: Normal (60-100)
+    Orange: Mild tachycardia (101-120)
+    Red: Severe tachycardia (>120)
+
+    :param pulse_value: The Pulse value.
+    :returns: The name of the color.
+    :rtype: str
+        """
+    if pulse_value > 120:
+        return 'red'
+    if pulse_value > 100:
+        return 'orange'
+    if pulse_value < 60:
+        return 'blue'
+    return 'green'
+
+
+def diastolic_color(diastolic_value: int) -> str:
+    """
+        Adds a color for the diastolic heart value.
+
+        Diastolic:
+        Green: Normal (<85)
+        Yellow: High-normal (85-89)
+        Orange: Hypertension grade 1 (90-99)
+        Red: Hypertension grade 2 (100-109)
+        Violet (purple): Grade 3 hypertension (≥110)
+
+        :param diastolic_value: Diastolic heart value
+        :returns: The name of the color
+        :rtype: str
+    """
+    if diastolic_value >= 110:
+        return 'purple'
+    if diastolic_value >= 100:
+        return 'red'
+    if diastolic_value >= 90:
+        return 'orange'
+    if diastolic_value >= 85:
+        return 'yellow'
+    return 'green'
+
+
+def puls_pressure_color(pulse_pressure_value: int) -> str:
+    """
+    Adds a color for the pulse pressure.
+        
+    :param pulse_pressure_value: The pulse pressure value.
+    :returns: The name of the color.
+    :rtype: str
+    """
+    if pulse_pressure_value >= 90:
+        return 'red'
+    if pulse_pressure_value >= 76:
+        return 'yellow'
+    if pulse_pressure_value >= 66:
+        return 'orange'
+    if pulse_pressure_value >= 40:
+        return 'green'
+    return 'grey'

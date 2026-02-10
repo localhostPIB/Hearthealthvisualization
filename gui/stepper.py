@@ -5,6 +5,11 @@ from model import GenderEnum
 def build_stepper(validate_positive_float, save_user_values, save_bmi_values, build_grid_view):
     """
     If the database is empty, a short interactive question is asked.
+
+    :param validate_positive_float: function to validate positive float values.
+    :param save_user_values: function to save user values.
+    :param save_bmi_values: function to save BMI values.
+    :param build_grid_view: function to build the grid view.
     """
     size_input = None
     weight_input = None
@@ -76,4 +81,3 @@ def build_stepper(validate_positive_float, save_user_values, save_bmi_values, bu
                 with ui.stepper_navigation():
                     ui.button('Zurück', on_click=stepper.previous).props('flat')
                     ui.button('Fertigstellen', on_click=finish_if_valid)
-

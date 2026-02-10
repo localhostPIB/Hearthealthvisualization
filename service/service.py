@@ -1,6 +1,6 @@
 from datetime import datetime
 import os
-import tempfile
+
 from pathlib import Path
 from typing import List, Any, LiteralString
 
@@ -76,9 +76,21 @@ def delete_heart_value_by_id_service(heart_id: int):
 
 
 def get_newest_bmi_service() -> list[BMI]:
+    """
+    Outputs the newest BMI-value.
+
+    :returns: The newest BMI-value.
+    :rtype: list[BMI]
+    """
     return get_newest_bmi()
 
 def get_user_service() -> list[Heart]:
+    """
+    Outputs all users.
+
+    :returns: A list of all users.
+    :rtype: list[Heart]
+    """
     return get_all_users()
 
 def get_all_bmi_service() -> list[BMI]:
@@ -86,7 +98,7 @@ def get_all_bmi_service() -> list[BMI]:
     Outputs all bmi-objects in a list.
 
     :returns: List with all bmi-objects.
-    :rtype: list
+    :rtype: list[BMI]
     """
     return get_all_bmi()
 
@@ -96,7 +108,7 @@ def all_values_as_json_service(all_values: list) -> list[dict[str, Any]]:
     Revised the blood pressure values for Nicegui as JSON.
 
     :returns: Blood pressure values as JSON.
-    :rtype: list
+    :rtype: list[BMI]
     """
     return [
         {
@@ -111,7 +123,7 @@ def all_values_as_json_service(all_values: list) -> list[dict[str, Any]]:
     ]
 
 
-def delete_bmi_value(bmi_id: id):
+def delete_bmi_value(bmi_id: int):
     """
     Deletes the BMI entry in the database using the id in the database
         
@@ -284,4 +296,5 @@ def save_health_data_to_document(heart_plot: Figure, bmi_plot: Figure ,measured_
         return final_pdf_path
 
     except PDFNotCreatedException as e:
+        print(e)
         raise e
