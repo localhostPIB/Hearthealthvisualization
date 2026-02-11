@@ -6,6 +6,7 @@ def set_dark_mode():
     Adds a Nicegui dark mode.
     """
     dark = ui.dark_mode()
+    dark.auto()
 
     with ui.row().classes('items-center gap-4 ml-6'):
         ui.icon('light_mode').classes('text-yellow-500 text-2xl')

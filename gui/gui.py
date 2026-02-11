@@ -139,7 +139,7 @@ def build_grid_view():
     all_heart_values = get_all_heart_service()
 
     with (result_container):
-        with ui.column().classes('w-screen justify-center items-center'):
+        with ui.column().classes('w-full max-w-full justify-center items-center'):
             with ui.row().classes('items-center gap-3'):
                 ui.icon('waving_hand').classes('text-5xl')
                 ui.label(f'Hallo {get_user_service()[0].name}').classes('text-xl font-medium')
