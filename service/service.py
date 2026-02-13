@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List, Any, LiteralString
 
 from plotly.graph_objs import Figure, Indicator
+import plotly.graph_objects as go
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import cm
@@ -117,7 +118,7 @@ def all_values_as_json_service(all_values: list) -> list[dict[str, Any]]:
             "Diastolisch": heart.diastolic_BP,
             "Pulsdruck": heart.calc_pulse_pressure(),
             "Puls": heart.puls_Frequency,
-            "Datum": heart.date.strftime("%d-%m-%Y")
+            "Datum": heart.date.strftime("%d.%m.%Y")
         }
         for heart in all_values
     ]
@@ -174,6 +175,27 @@ def make_line_plot_service(heart_list: List[Heart]) -> Figure:
     df = pd.DataFrame([(heart_value.puls_Frequency, heart_value.date, heart_value.systolic_BP, heart_value.diastolic_BP)
                        for heart_value in heart_list],
                       columns=['puls_Frequency', 'date', 'systolic_BP', 'diastolic_BP'])
+
+    if df.empty:
+        fig = go.Figure()
+
+        fig.add_annotation(
+            text="Keine Messwerte wie Puls oder Blutdruck vorhanden",
+            xref="paper",
+            yref="paper",
+            x=0.5,
+            y=0.5,
+            showarrow=False,
+            font=dict(size=18)
+        )
+
+        fig.update_layout(
+            xaxis=dict(visible=False),
+            yaxis=dict(visible=False),
+            plot_bgcolor="white"
+        )
+
+        return fig
 
     df = df.sort_values(by='date')
 
@@ -249,6 +271,8 @@ def save_health_data_to_document(heart_plot: Figure, bmi_plot: Figure ,measured_
     :returns: The path of the final PDF-file.
     :rtype: LiteralString | str | bytes
     """
+
+
     canvas_width, canvas_height = landscape(A4)
     now = datetime.now()
     pdf_name = pdf_name or "plot"

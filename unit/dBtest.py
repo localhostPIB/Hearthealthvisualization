@@ -2,17 +2,21 @@ import random
 import unittest
 from datetime import timedelta, datetime
 
-from sqlalchemy import Enum
+from faker import Faker
 
 from dao import save_user
 from main import init_database
 from model import User, GenderEnum
+from faker.providers.person.en import Provider
 from service import save_heart_service, save_bmi_service
 
 
 class MyTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.db = init_database()
+        self.db = init_database()
+        self.fake = Faker("de_DE")
+        self.fake.seed_instance(42)
 
     def _random_datetime(self,startdate, enddate):
         delta = enddate - startdate  # Calculate time span
@@ -26,13 +30,13 @@ class MyTestCase(unittest.TestCase):
         """
         Test-cases.
         """
-        user = User(name="User", age=30, gender=GenderEnum.MALE)
+        user = User(first_name=self.fake.first_name(), last_name=self.fake.last_name() ,age=30, gender=GenderEnum.MALE)
         save_user(user)
 
-        save_heart_service(user_id=user.id,systolic_bp=120, diastolic_bp=77, puls_frequency=63, date=self._random_datetime(start_date, end_date))
+        save_heart_service(user_id=user.id,systolic_bp=130, diastolic_bp=90, puls_frequency=85, date=self._random_datetime(start_date, end_date))
         save_heart_service(user_id=user.id,systolic_bp=121, diastolic_bp=77, puls_frequency=60, date=self._random_datetime(start_date, end_date))
         save_heart_service(user_id=user.id,systolic_bp=119, diastolic_bp=78, puls_frequency=65, date=self._random_datetime(start_date, end_date))
-        save_heart_service(user_id=user.id,systolic_bp=118, diastolic_bp=74, puls_frequency=68, date=self._random_datetime(start_date, end_date))
+        save_heart_service(user_id=user.id,systolic_bp=160, diastolic_bp=74, puls_frequency=68, date=self._random_datetime(start_date, end_date))
 
         save_heart_service(user_id=user.id,systolic_bp=123, diastolic_bp=81, puls_frequency=57, date=self._random_datetime(start_date, end_date))
         save_heart_service(user_id=user.id,systolic_bp=130, diastolic_bp=77, puls_frequency=60, date=self._random_datetime(start_date, end_date))

@@ -14,7 +14,8 @@ class User(Base):
     __tablename__ = 'user'
 
     id: Mapped[int] = Column(Integer, primary_key=True)
-    name: Mapped[str] = Column(String, nullable=False)
+    first_name: Mapped[str] = Column(String, nullable=False)
+    last_name: Mapped[str] = Column(String, nullable=False)
     age: Mapped[int] = Column(Integer, nullable=False)
     gender: Mapped[GenderEnum] = Column(Enum(GenderEnum), nullable=False)
 
@@ -22,8 +23,9 @@ class User(Base):
     bmi_value: Mapped[List["BMI"]] = relationship("BMI", back_populates="user" ,lazy=True)
 
     def __repr__(self):
-        return "%s %s %s %s" % (
-            self.name,
+        return "%s %s %s %s %s" % (
+            self.first_name,
+            self.last_name,
             self.age,
             self.gender,
             self.heart_value

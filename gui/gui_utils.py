@@ -25,7 +25,7 @@ def systolic_color(systolic_value: int) -> str:
     Red: Grade 2 hypertension (140-179)
     Purple: Grade 3 hypertension (≥180)
 
-    :param systolic_value:  systolic heart value
+    :param systolic_value: Systolic heart value
     :returns: The name of the color
     :rtype: str
     """

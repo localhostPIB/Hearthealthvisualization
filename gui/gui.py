@@ -38,15 +38,26 @@ def save_bmi_values(weight_input, size_input, user_id):
     update_view()
 
 
-def save_user_values(name_input, gender_select, age_input):
-    name = name_input.value
+def save_user_values(first_name_input, last_name_input ,gender_select, age_input) -> int:
+    """
+    Stores all user data.
+        
+    :param first_name_input: First name of the user.
+    :param last_name_input: Last name of the user.
+    :param gender_select: Gender of the user.
+    :param age_input: Age of the user.
+    :returns: User id
+    :rtype: int
+    """
+    first_name = first_name_input.value
+    last_name = last_name_input.value
     gender = gender_select.value
     age = int(age_input.value)
 
-    user = User(name=name, age=age, gender=gender[0])
+    user = User(first_name=first_name, last_name=last_name ,age=age, gender=gender[0])
 
     user_id = save_user_service(user)
-    ui.notify(f'Name: {name}, Geschlecht: {gender[0].value}, Alter: {age}', color='green')
+    ui.notify(f'Name: {first_name} {last_name}, Geschlecht: {gender[0].value}, Alter: {age}', color='green')
 
     return user_id
 
@@ -77,10 +88,12 @@ def save_heart_values(user_id, diastolic_input, systolic_input, pulse_input, dat
                 or validate_positive_integer(pulse)):
             ui.notify('Bitte nur positive Werte eingeben!', color='red')
             return
+
         save_heart_service(user_id, systolic, diastolic, pulse, date)
         update_view()
         ui.notify(f'Diastolisch: {diastolic}, Systolisch: {systolic}, Puls: {pulse}', color='green')
     except HeathValueNotSaveException as e:
+        print(e)
         raise e
 
 
@@ -123,121 +136,125 @@ def update_view():
 
 
 def build_grid_view():
-    global plot, raw_plot, no_data_label_bmi, no_data_label, no_data_icon, no_data_label, no_data_icon_bmi, bmi_plot, bmi_label
+    global plot, raw_plot, no_data_label_bmi, no_data_label, no_data_icon, \
+        no_data_label, no_data_icon_bmi, bmi_plot, bmi_label
+
+    current_date = datetime
+    all_heart_values = get_all_heart_service()
 
     with ui.fab('settings', color='blue', direction='right').style(f'position: sticky;  z-index: 1000;'):
         ui.fab_action('save', label='Speichere Plot als PDF', color='green',
                       on_click=lambda: ui.download(save_health_data_to_document(
                           make_line_plot_service(all_heart_values),
                           make_gauge_chart_service(get_newest_bmi_service().calc_bmi()),
-                          all_values_as_json_service(all_heart_values), "Health")))
+                          all_values_as_json_service(all_heart_values),
+                          f"Gesundheitsdaten_{get_user_service()[0].first_name}_{get_user_service()[0].last_name}")))
         ui.fab_action('highlight_off', label='Beenden', on_click=lambda: app.shutdown(), color='red')
 
     result_container = ui.grid(columns=1).classes('justify-center items-center w-full')
 
-    current_date = datetime
-    all_heart_values = get_all_heart_service()
 
-    with (result_container):
+    with result_container:
         with ui.column().classes('w-full max-w-full justify-center items-center'):
             with ui.row().classes('items-center gap-3'):
                 ui.icon('waving_hand').classes('text-5xl')
-                ui.label(f'Hallo {get_user_service()[0].name}').classes('text-xl font-medium')
+                ui.label(f'Hallo {get_user_service()[0].first_name}').classes('text-xl font-medium')
 
-        with ui.tabs().bind_value(active_tab, 'value').classes('w-full') as tabs:
-            tab_one = ui.tab('Plot', icon='stacked_line_chart')
-            tab_two = ui.tab('Alle Werte', icon='table_view')
+            with ui.tabs().bind_value(active_tab, 'value').classes('w-full') as tabs:
+                tab_one = ui.tab('Plot', icon='stacked_line_chart')
+                tab_two = ui.tab('Alle Werte', icon='table_view')
 
-        with ui.tab_panels(tabs, value=tab_one).classes('w-full'):
-            with ui.tab_panel(tab_one):
-                with ui.expansion('Herzgesundheit', icon='monitor_heart').classes('w-[95%] mx-auto'):
-                    ui.label('Herzwerte Übersicht').classes('text-2xl font-bold mb-4')
+            with ui.tab_panels(tabs, value=tab_one).classes('w-full'):
+                with ui.tab_panel(tab_one):
+                    with ui.expansion('Herzgesundheit', icon='monitor_heart').classes('w-[95%] mx-auto'):
+                        ui.label('Herzwerte Übersicht').classes('text-2xl font-bold mb-4')
 
-                    with ui.row().classes('flex w-full items-start gap-4'):
-                        plot_container = ui.card().classes('w-fill p-8')
-                        input_container = ui.card().classes('w-1/5 p-8')
+                        with ui.row().classes('flex w-full items-start gap-4'):
+                            plot_container = ui.card().classes('w-fill p-8')
+                            input_container = ui.card().classes('w-1/5 p-8')
 
-                        with plot_container:
-                            if all_heart_values:
+                            with plot_container:
+                                #if all_heart_values:
                                 raw_plot = make_line_plot_service(all_heart_values)
-                            else:
-                                from plotly.graph_objects import Figure
-                                raw_plot = Figure()
+                                #else:
+                                 #   from plotly.graph_objects import Figure
+                                  #  raw_plot = Figure()
 
-                            plot = ui.plotly(raw_plot).classes('max-w-full h-auto')
+                                plot = ui.plotly(raw_plot).classes('max-w-full h-auto')
 
-                            if not all_heart_values:
-                                no_data_icon = ui.icon('info', color='grey', size='xl')
-                                no_data_label = ui.label('Keine Daten vorhanden').classes('text-lg text-gray-500')
+                                if not all_heart_values:
+                                    no_data_icon = ui.icon('info', color='grey', size='xl')
+                                    no_data_label = ui.label('Keine Daten vorhanden').classes('text-lg text-gray-500')
 
-                        with input_container:
-                            ui.label('Eingabe der Werte').classes('text-lg font-semibold mb-2')
+                            with input_container:
+                                ui.label('Eingabe der Werte').classes('text-lg font-semibold mb-2')
 
-                            systolic_input = ui.input('Systolischer Wert', placeholder='1 - 999 mmHg',
+                                systolic_input = ui.input('Systolischer Wert', placeholder='1 - 999 mmHg',
                                                       validation=validate_positive_integer).classes('w-full')
 
-                            diastolic_input = ui.input('Diastolischer Wert', placeholder='1 - 999 mmHg',
+                                diastolic_input = ui.input('Diastolischer Wert', placeholder='1 - 999 mmHg',
                                                        validation=validate_positive_integer).classes('w-full')
 
-                            pulse_input = ui.input('Puls', placeholder='1 - 999 bpm',
+                                pulse_input = ui.input('Puls', placeholder='1 - 999 bpm',
                                                    validation=validate_positive_integer).classes('w-full')
 
-                            ui.label("Gib Datum und Uhrzeit ein:")
-                            date_input = ui.input("Datum", placeholder="Tag.Monat.Jahr",
+                                ui.label("Gib Datum und Uhrzeit ein:")
+                                date_input = ui.input("Datum", placeholder="Tag.Monat.Jahr",
                                                   value=current_date.today().date()
                                                   .isoformat()).props('type=date').classes('w-full')
 
-                            time_input = ui.input("Uhrzeit", placeholder="hh:mm", value=current_date.now().
+                                time_input = ui.input("Uhrzeit", placeholder="hh:mm", value=current_date.now().
                                                   strftime('%H:%M')).props('type=time').classes('w-full')
-                            ui.button('Werte speichern',
+                                ui.button('Werte speichern',
                                       on_click=lambda: save_heart_values(get_user_service()[0].id, diastolic_input,
                                                                          systolic_input, pulse_input,
                                                                          date_input, time_input)).classes(
                                 'px-6 py-2 mt-2')
 
-                with ui.expansion("Übersicht Body Mass Index", icon='run_circle').classes('w-[95%] mx-auto'):
-                    ui.label('Übersicht Body Mass Index (BMI):').classes('text-2xl font-bold mb-4')
-                    with ui.row().classes('w-full gap-4 items-start'):
-                        plot_container = ui.card()
-                        input_container = ui.card()
+                    with ui.expansion("Übersicht Body Mass Index", icon='run_circle').classes('w-[95%] mx-auto'):
+                        ui.label('Übersicht Body Mass Index (BMI):').classes('text-2xl font-bold mb-4')
+                        with ui.row().classes('w-full gap-4 items-start'):
+                            plot_container = ui.card()
+                            input_container = ui.card()
 
-                        with plot_container:
-                            bmi = get_newest_bmi_service()
-                            if not bmi:
-                                no_data_icon_bmi = ui.icon('info', color='grey', size='xl')
-                                no_data_label_bmi = ui.label('Keine Daten vorhanden').classes('text-lg text-gray-500')
-                                bmi_raw_plot = make_gauge_chart_service(0)
-                            else:
-                                bmi_raw_plot = make_gauge_chart_service(get_newest_bmi_service().calc_bmi())
-                                ui.label(f"Bei einer Körpergröße von: {bmi.size} m wiegen Sie {bmi.weight} kg").classes(
+                            with plot_container:
+                                bmi = get_newest_bmi_service()
+                                if not bmi:
+                                    no_data_icon_bmi = ui.icon('info', color='grey', size='xl')
+                                    no_data_label_bmi = ui.label('Keine Daten vorhanden').classes('text-lg text-gray-500')
+                                    bmi_raw_plot = make_gauge_chart_service(0)
+                                else:
+                                    bmi_raw_plot = make_gauge_chart_service(get_newest_bmi_service().calc_bmi())
+                                    ui.label(f"Bei einer Körpergröße von: {bmi.size} m wiegen Sie {bmi.weight} kg").classes(
                                     'text-center')
 
-                            bmi_plot = ui.plotly(bmi_raw_plot).classes('w-full max-w-[500px] h-[500px]')
+                                bmi_plot = ui.plotly(bmi_raw_plot).classes('w-full max-w-[500px] h-[500px]')
 
-                        with input_container:
-                            ui.label('Eingabe der Werte').classes('text-lg font-semibold mb-4')
+                            with input_container:
+                                ui.label('Eingabe der Werte').classes('text-lg font-semibold mb-4')
 
-                            weight_input = ui.input(
-                                'Körpergewicht (in kg)',
-                                placeholder='1 - 999 kg',
-                                validation=validate_positive_float
-                            ).classes('w-full mb-2')
+                                weight_input = ui.input(
+                                    'Körpergewicht (in kg)',
+                                    placeholder='1 - 999 kg',
+                                    validation=validate_positive_float
+                                 ).classes('w-full mb-2')
 
-                            size_input = ui.input(
-                                'Körpergröße (in m)',
-                                placeholder='0.5 - 2.5 m',
-                                validation=validate_positive_float
-                            ).classes('w-full mb-4')
+                                size_input = ui.input(
+                                    'Körpergröße (in m)',
+                                    placeholder='0.5 - 2.5 m',
+                                    validation=validate_positive_float
+                                ).classes('w-full mb-4')
 
-                            ui.button(
-                                'Werte speichern',
-                                on_click=lambda: save_bmi_values(weight_input, size_input, get_user_service()[0].id)
-                            ).classes('px-6 py-2 self-start')
-            with ui.tab_panel(tab_two):
-                if all_heart_values:
-                    build_ui_table()
-                else:
-                    ui.label('Keine Einträge vorhanden').classes('mx-auto')
+                                ui.button(
+                                    'Werte speichern',
+                                    on_click=lambda: save_bmi_values(weight_input, size_input, get_user_service()[0].id)
+                                ).classes('px-6 py-2 self-start')
+
+                with ui.tab_panel(tab_two):
+                    if all_heart_values:
+                        build_ui_table()
+                    else:
+                        ui.label('Keine Einträge vorhanden').classes('mx-auto')
 
 
 def delete_heart_value(entry_id: int):
