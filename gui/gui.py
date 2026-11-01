@@ -37,7 +37,6 @@ def save_bmi_values(weight_input, size_input, user_id):
     save_bmi_service(weight, size, user_id)
     update_view()
 
-
 def save_user_values(first_name_input, last_name_input ,gender_select, age_input) -> int:
     """
     Stores all user data.
@@ -105,7 +104,11 @@ def update_view():
 
     all_heart_values: Final[list] = get_all_heart_service()
     all_bmi_values: Final[list] = get_all_bmi_service()
+    build_ui_table.refresh()
 
+    if not all_heart_values:
+        no_data_label = ui.label('Keine Daten vorhanden').classes('text-lg text-gray-500')
+        no_data_icon = ui.icon('info', color='grey', size='xl')
 
     # Updates heart plot if data exists; removes placeholder
     if plot and all_heart_values:
@@ -113,7 +116,6 @@ def update_view():
         plot.figure = new_fig
         plot.figure.layout = new_fig.layout
         ui.update(plot)
-        build_ui_table.refresh()
 
         if no_data_label and no_data_icon:
             no_data_label.delete()
@@ -135,6 +137,46 @@ def update_view():
             no_data_label_bmi = None
 
 
+
+def export_health_data_to_pdf():
+    """
+    Exports the current health data as a PDF document.
+
+    The latest heart and BMI values are retrieved from the database.
+    Based on these values, the corresponding plots and JSON data are
+    generated and passed to the PDF generation service.
+
+    The resulting PDF document is downloaded by the user.
+
+    :raises Exception: If an error occurs while retrieving the data
+                       or generating the PDF document.
+    """
+    all_heart_values = get_all_heart_service()
+    all_bmi_values = get_all_bmi_service()
+
+    if not all_heart_values and not all_bmi_values:
+        ui.notify('Keine Herzwerte Und BMI-Werte zum Exportieren vorhanden!', color='red')
+        return
+
+
+    heart_plot = make_line_plot_service(all_heart_values)
+
+    bmi_plot = make_gauge_chart_service(
+        get_newest_bmi_service().calc_bmi()
+    )
+
+    json_data = all_values_as_json_service(all_heart_values)
+
+    filename = (
+        f"Gesundheitsdaten_"
+        f"{get_user_service()[0].first_name}_"
+        f"{get_user_service()[0].last_name}"
+    )
+
+    pdf_data = save_health_data_to_document(heart_plot, bmi_plot, json_data, filename)
+
+    ui.download(pdf_data)
+
 def build_grid_view():
     global plot, raw_plot, no_data_label_bmi, no_data_label, no_data_icon, \
         no_data_label, no_data_icon_bmi, bmi_plot, bmi_label
@@ -142,14 +184,23 @@ def build_grid_view():
     current_date = datetime
     all_heart_values = get_all_heart_service()
 
-    with ui.fab('settings', color='blue', direction='right').style(f'position: sticky;  z-index: 1000;'):
-        ui.fab_action('save', label='Speichere Plot als PDF', color='green',
-                      on_click=lambda: ui.download(save_health_data_to_document(
-                          make_line_plot_service(all_heart_values),
-                          make_gauge_chart_service(get_newest_bmi_service().calc_bmi()),
-                          all_values_as_json_service(all_heart_values),
-                          f"Gesundheitsdaten_{get_user_service()[0].first_name}_{get_user_service()[0].last_name}")))
-        ui.fab_action('highlight_off', label='Beenden', on_click=lambda: app.shutdown(), color='red')
+    with ui.fab('settings', color='blue', direction='right').style(
+            'position: sticky; z-index: 1000;'
+    ):
+
+        ui.fab_action(
+            'save',
+            label='Speichere Plot als PDF',
+            color='green',
+            on_click=export_health_data_to_pdf
+        )
+
+        ui.fab_action(
+            'highlight_off',
+            label='Beenden',
+            on_click=lambda: app.shutdown(),
+            color='red'
+        )
 
     result_container = ui.grid(columns=1).classes('justify-center items-center w-full')
 
@@ -251,19 +302,28 @@ def build_grid_view():
                                 ).classes('px-6 py-2 self-start')
 
                 with ui.tab_panel(tab_two):
-                    if all_heart_values:
-                        build_ui_table()
-                    else:
-                        ui.label('Keine Einträge vorhanden').classes('mx-auto')
+                    build_ui_table()
 
 
 def delete_heart_value(entry_id: int):
+    """
+    Delete a heart value
+
+    :param entry_id: id of the heart value:
+    """
     delete_heart_value_by_id_service(entry_id)
     update_view()
 
 @ui.refreshable
 def build_ui_table():
+    """
+    Build the UI-Table tab
+    """
     all_heart_values = get_all_heart_service()
+
+    if not all_heart_values:
+        ui.label('Keine Einträge vorhanden')
+        return
 
     with ui.column().classes('w-full'):
         with ui.row().classes('font-bold border-b'):
